@@ -26,7 +26,7 @@ package business
 
 import (
 	"github.com/algotiqa/inventory-server/pkg/db"
-	"github.com/algotiqa/sick-engine/session"
+	"github.com/algotiqa/tiq-engine/session"
 )
 
 //=============================================================================
