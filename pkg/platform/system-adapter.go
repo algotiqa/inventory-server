@@ -25,9 +25,9 @@ THE SOFTWARE.
 package platform
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/inventory-server/pkg/app"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/inventory-server/pkg/app"
 	"sync"
 )
 
@@ -106,8 +106,8 @@ func loadSystems(c *auth.Context) error {
 
 	var systemList SystemList
 
-	client :=req.GetClient("bf")
-	url := c.Config.(*app.Config).Platform.System +"/v1/adapters"
+	client := req.GetClient("bf")
+	url := c.Config.(*app.Config).Platform.System + "/v1/adapters"
 	err := req.DoGet(client, url, &systemList, c.Token)
 
 	if err != nil {

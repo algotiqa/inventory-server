@@ -25,9 +25,9 @@ THE SOFTWARE.
 package service
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/inventory-server/pkg/business"
-	"github.com/tradalia/inventory-server/pkg/db"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/inventory-server/pkg/business"
+	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -86,7 +86,7 @@ func updateTradingSystem(c *auth.Context) {
 
 	if err == nil {
 		var id uint
-		id,err = c.GetIdFromUrl()
+		id, err = c.GetIdFromUrl()
 
 		if err == nil {
 			err = db.RunInTransaction(func(tx *gorm.DB) error {
@@ -108,11 +108,11 @@ func updateTradingSystem(c *auth.Context) {
 //=============================================================================
 
 func deleteTradingSystem(c *auth.Context) {
-	id,err := c.GetIdFromUrl()
+	id, err := c.GetIdFromUrl()
 
 	if err == nil {
 		err = db.RunInTransaction(func(tx *gorm.DB) error {
-			ts,err := business.DeleteTradingSystem(tx, c, id)
+			ts, err := business.DeleteTradingSystem(tx, c, id)
 
 			if err != nil {
 				return err
@@ -128,7 +128,7 @@ func deleteTradingSystem(c *auth.Context) {
 //=============================================================================
 
 func finalizeTradingSystem(c *auth.Context) {
-	id,err := c.GetIdFromUrl()
+	id, err := c.GetIdFromUrl()
 
 	if err == nil {
 		err = db.RunInTransaction(func(tx *gorm.DB) error {

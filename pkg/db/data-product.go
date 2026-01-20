@@ -25,7 +25,7 @@ THE SOFTWARE.
 package db
 
 import (
-	"github.com/tradalia/core/req"
+	"github.com/algotiqa/core/req"
 	"gorm.io/gorm"
 )
 
@@ -46,10 +46,10 @@ func GetDataProducts(tx *gorm.DB, filter map[string]any, offset int, limit int) 
 
 func GetDataProductsFull(tx *gorm.DB, filter map[string]any, offset int, limit int) (*[]DataProductFull, error) {
 	var list []DataProductFull
-	query :=	"SELECT dp.*, c.code as connection_code, c.name as connection_name, c.system_code as system_code, e.code as exchange_code " +
-				"FROM data_product dp " +
-				"LEFT JOIN connection c on dp.connection_id = c.id "+
-				"LEFT JOIN exchange   e on dp.exchange_id   = e.id"
+	query := "SELECT dp.*, c.code as connection_code, c.name as connection_name, c.system_code as system_code, e.code as exchange_code " +
+		"FROM data_product dp " +
+		"LEFT JOIN connection c on dp.connection_id = c.id " +
+		"LEFT JOIN exchange   e on dp.exchange_id   = e.id"
 
 	res := tx.Raw(query).Where(filter).Offset(offset).Limit(limit).Find(&list)
 

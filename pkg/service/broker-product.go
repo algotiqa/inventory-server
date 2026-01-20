@@ -25,9 +25,9 @@ THE SOFTWARE.
 package service
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/inventory-server/pkg/business"
-	"github.com/tradalia/inventory-server/pkg/db"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/inventory-server/pkg/business"
+	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -104,7 +104,7 @@ func updateBrokerProduct(c *auth.Context) {
 	err := c.BindParamsFromBody(&pds)
 
 	if err == nil {
-		id,err := c.GetIdFromUrl()
+		id, err := c.GetIdFromUrl()
 
 		if err == nil {
 			err = db.RunInTransaction(func(tx *gorm.DB) error {

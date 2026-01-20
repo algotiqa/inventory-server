@@ -25,19 +25,19 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/inventory-server/pkg/db"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
 
 //=============================================================================
 
 func GetAgentProfiles(tx *gorm.DB, c *auth.Context, filter map[string]any, offset int, limit int) (*[]db.AgentProfile, error) {
-	if ! c.Session.IsAdmin() {
+	if !c.Session.IsAdmin() {
 		filter["username"] = c.Session.Username
 	}
 
-	list,err := db.GetAgentProfiles(tx, filter, offset, limit)
+	list, err := db.GetAgentProfiles(tx, filter, offset, limit)
 
 	if err != nil {
 		return nil, err

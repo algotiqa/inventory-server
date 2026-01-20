@@ -25,32 +25,32 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/tradalia/inventory-server/pkg/db"
-	"github.com/tradalia/sick-engine/session"
+	"github.com/algotiqa/inventory-server/pkg/db"
+	"github.com/algotiqa/sick-engine/session"
 )
 
 //=============================================================================
 
 type ConnectionSpec struct {
-	Code                string `json:"code"       binding:"required"`
-	Name                string `json:"name"       binding:"required"`
-	SystemCode          string `json:"systemCode" binding:"required"`
-	SystemConfigParams  string `json:"systemConfigParams"`
+	Code               string `json:"code"       binding:"required"`
+	Name               string `json:"name"       binding:"required"`
+	SystemCode         string `json:"systemCode" binding:"required"`
+	SystemConfigParams string `json:"systemConfigParams"`
 }
 
 //=============================================================================
 
 type TradingSystemSpec struct {
-	DataProductId     uint   `json:"dataProductId"     binding:"required"`
-	BrokerProductId   uint   `json:"brokerProductId"   binding:"required"`
-	TradingSessionId  uint   `json:"tradingSessionId"  binding:"required"`
-	AgentProfileId    *uint  `json:"agentProfileId"`
-	Name              string `json:"name"              binding:"required"`
-	Timeframe         int    `json:"timeframe"         binding:"min=1,max=1440"`
-	StrategyType      string `json:"strategyType"      binding:"required"`
-	Overnight         bool   `json:"overnight"`
-	Tags              string `json:"tags"`
-	ExternalRef       string `json:"externalRef"`
+	DataProductId    uint   `json:"dataProductId"     binding:"required"`
+	BrokerProductId  uint   `json:"brokerProductId"   binding:"required"`
+	TradingSessionId uint   `json:"tradingSessionId"  binding:"required"`
+	AgentProfileId   *uint  `json:"agentProfileId"`
+	Name             string `json:"name"              binding:"required"`
+	Timeframe        int    `json:"timeframe"         binding:"min=1,max=1440"`
+	StrategyType     string `json:"strategyType"      binding:"required"`
+	Overnight        bool   `json:"overnight"`
+	Tags             string `json:"tags"`
+	ExternalRef      string `json:"externalRef"`
 }
 
 //=============================================================================
@@ -85,9 +85,9 @@ type BrokerProductSpec struct {
 
 type TradingSession struct {
 	db.Common
-	Username  string                  `json:"username"`
-	Name      string                  `json:"name"`
-	Session   *session.TradingSession `json:"session"`
+	Username string                  `json:"username"`
+	Name     string                  `json:"name"`
+	Session  *session.TradingSession `json:"session"`
 }
 
 //=============================================================================
@@ -98,16 +98,16 @@ type TradingSession struct {
 
 type BrokerProductExt struct {
 	db.BrokerProduct
-	Connection  db.Connection  `json:"connection"`
-	Exchange    db.Exchange    `json:"exchange"`
+	Connection db.Connection `json:"connection"`
+	Exchange   db.Exchange   `json:"exchange"`
 }
 
 //=============================================================================
 
 type DataProductExt struct {
 	db.DataProduct
-	Connection  db.Connection  `json:"connection,omitempty"`
-	Exchange    db.Exchange    `json:"exchange,omitempty"`
+	Connection db.Connection `json:"connection,omitempty"`
+	Exchange   db.Exchange   `json:"exchange,omitempty"`
 }
 
 //=============================================================================
@@ -117,13 +117,13 @@ type DataProductExt struct {
 //=============================================================================
 
 type TradingSystemMessage struct {
-	TradingSystem   *db.TradingSystem   `json:"tradingSystem"`
-	DataProduct     *db.DataProduct     `json:"dataProduct"`
-	BrokerProduct   *db.BrokerProduct   `json:"brokerProduct"`
-	Currency        *db.Currency        `json:"currency"`
-	TradingSession  *db.TradingSession  `json:"tradingSession"`
-	AgentProfile    *db.AgentProfile    `json:"agentProfile"`
-	Exchange        *db.Exchange        `json:"exchange"`
+	TradingSystem  *db.TradingSystem  `json:"tradingSystem"`
+	DataProduct    *db.DataProduct    `json:"dataProduct"`
+	BrokerProduct  *db.BrokerProduct  `json:"brokerProduct"`
+	Currency       *db.Currency       `json:"currency"`
+	TradingSession *db.TradingSession `json:"tradingSession"`
+	AgentProfile   *db.AgentProfile   `json:"agentProfile"`
+	Exchange       *db.Exchange       `json:"exchange"`
 }
 
 //=============================================================================
@@ -147,7 +147,7 @@ type BrokerProductMessage struct {
 
 // TradingSessionMessage TODO: To be implemented
 type TradingSessionMessage struct {
-	TradingSession  db.TradingSession  `json:"tradingSession"`
+	TradingSession db.TradingSession `json:"tradingSession"`
 }
 
 //=============================================================================

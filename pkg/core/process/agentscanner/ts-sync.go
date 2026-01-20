@@ -35,11 +35,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/tradalia/core/datatype"
-	"github.com/tradalia/core/msg"
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/inventory-server/pkg/app"
-	"github.com/tradalia/inventory-server/pkg/db"
+	"github.com/algotiqa/core/datatype"
+	"github.com/algotiqa/core/msg"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/inventory-server/pkg/app"
+	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -67,7 +67,7 @@ func Init(cfg *app.Config) *time.Ticker {
 //=============================================================================
 
 func run() {
-	agents,err := getAgentProfiles()
+	agents, err := getAgentProfiles()
 	if err != nil {
 		slog.Error("Cannot retrieve agent profiles", "error", err)
 		return
@@ -90,7 +90,7 @@ func getAgentProfiles() (*[]db.AgentProfile, error) {
 
 	err := db.RunInTransaction(func(tx *gorm.DB) error {
 		var err error
-		list,err = db.GetAgentProfiles(tx, filter, 0, 100000)
+		list, err = db.GetAgentProfiles(tx, filter, 0, 100000)
 		return err
 	})
 
@@ -103,7 +103,7 @@ func runAgent(ap *db.AgentProfile) {
 	delay, found := agentMap[ap.Id]
 	if !found {
 		agentMap[ap.Id] = ap.ScanInterval
-		delay           = ap.ScanInterval
+		delay = ap.ScanInterval
 	}
 
 	delay--
@@ -131,7 +131,7 @@ func collectFromAgent(ap *db.AgentProfile) {
 	if err == nil {
 		slog.Info("Trades successfully retrieved from agent", "username", ap.Username, "systems", strconv.Itoa(len(data)), "agent", ap.Name)
 
-		_ = db.RunInTransaction(func (tx *gorm.DB) error {
+		_ = db.RunInTransaction(func(tx *gorm.DB) error {
 			return enqueueAgentTrades(tx, ap, data)
 		})
 	} else {
@@ -146,16 +146,16 @@ func createClient(agentCert string, agentKey string, caCert string) *http.Client
 
 	cert, err := os.ReadFile(path + caCert)
 	if err != nil {
-		slog.Error("Cannot read agent CA certificate: ", "path", path + caCert)
+		slog.Error("Cannot read agent CA certificate: ", "path", path+caCert)
 		return nil
 	}
 
 	caCertPool := x509.NewCertPool()
 	caCertPool.AppendCertsFromPEM(cert)
 
-	certificate, err := tls.LoadX509KeyPair(path + agentCert, path + agentKey)
+	certificate, err := tls.LoadX509KeyPair(path+agentCert, path+agentKey)
 	if err != nil {
-		slog.Error("Cannot read agent certificate/private key: ", "certificate", path + agentCert, "key", path + agentKey)
+		slog.Error("Cannot read agent certificate/private key: ", "certificate", path+agentCert, "key", path+agentKey)
 		return nil
 	}
 
@@ -192,7 +192,7 @@ func enqueueAgentTrades(tx *gorm.DB, ap *db.AgentProfile, agentTss []TradingSyst
 			continue
 		}
 
-		for _,tl := range ats.TradeLists {
+		for _, tl := range ats.TradeLists {
 			err = sendTradeList(ts, ats.Name, tl, location)
 			if err != nil {
 				return err
@@ -256,13 +256,13 @@ func sendTradeList(ts *db.TradingSystem, extRef string, tl *TradeList, location 
 
 	message := TradeListMessage{
 		TradingSystemId: ts.Id,
-		Trades         : tradeList,
-		DailyProfits   : dayList,
+		Trades:          tradeList,
+		DailyProfits:    dayList,
 	}
 
 	err := msg.SendMessage(msg.ExRuntime, msg.SourceTrade, msg.TypeCreate, message)
 	if err != nil {
-		slog.Error("sendTradeList: Cannot enqueue trades for trading system","name", ts.Name, "error", err.Error())
+		slog.Error("sendTradeList: Cannot enqueue trades for trading system", "name", ts.Name, "error", err.Error())
 		return err
 	} else {
 		slog.Info("sendTradeList: Enqueued trades for trading system", "name", ts.Name, "username", ts.Username)
@@ -285,8 +285,8 @@ func createTrade(extRef string, atr *Trade, loc *time.Location) *TradeItem {
 		return nil
 	}
 
-	entryDate,err1 := parseDate(atr.EntryDate, atr.EntryTime, loc)
-	exitDate ,err2 := parseDate(atr.ExitDate,  atr.ExitTime,  loc)
+	entryDate, err1 := parseDate(atr.EntryDate, atr.EntryTime, loc)
+	exitDate, err2 := parseDate(atr.ExitDate, atr.ExitTime, loc)
 
 	if err1 != nil {
 		slog.Error("createTrade: Cannot parse entry date/time", "entryDate", atr.EntryDate, "entryTime", atr.EntryTime, "name", extRef)
@@ -304,31 +304,31 @@ func createTrade(extRef string, atr *Trade, loc *time.Location) *TradeItem {
 	}
 
 	return &TradeItem{
-		TradeType   : tradeType,
-		EntryDate   : &entryDate,
-		EntryPrice  : atr.EntryPrice,
-		EntryLabel  : atr.EntryLabel,
-		ExitDate    : &exitDate,
-		ExitPrice   : atr.ExitPrice,
-		ExitLabel   : atr.ExitLabel,
-		GrossProfit : atr.GrossProfit,
-		Contracts   : atr.Contracts,
+		TradeType:   tradeType,
+		EntryDate:   &entryDate,
+		EntryPrice:  atr.EntryPrice,
+		EntryLabel:  atr.EntryLabel,
+		ExitDate:    &exitDate,
+		ExitPrice:   atr.ExitPrice,
+		ExitLabel:   atr.ExitLabel,
+		GrossProfit: atr.GrossProfit,
+		Contracts:   atr.Contracts,
 	}
 }
 
 //=============================================================================
 
 func createDailyProfit(dp *DailyProfit, loc *time.Location) *DailyProfitItem {
-	date,err := parseDate(dp.Date, dp.Time, loc)
+	date, err := parseDate(dp.Date, dp.Time, loc)
 	if err != nil {
 		slog.Error("createDailyProfit: Cannot parse date/time", "date", dp.Date, "time", dp.Time, "error", err)
 		return nil
 	}
 
 	return &DailyProfitItem{
-		Day        : int(datatype.ToIntDate(&date)),
+		Day:         int(datatype.ToIntDate(&date)),
 		GrossProfit: dp.GrossProfit,
-		Trades     : dp.Trades,
+		Trades:      dp.Trades,
 	}
 }
 

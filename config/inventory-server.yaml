@@ -5,14 +5,14 @@ application:
 database:
   address: localhost:3400
   name: inventory
-  username: tradalia
-  password: tradalia
+  username: admin
+  password: admin
 authentication:
-  authority: https://tradalia-server:8443/auth/realms/tradalia
-  clientId: tradalia-backend
+  authority: https://algotiqa-server:8443/auth/realms/algotiqa
+  clientId: algotiqa-backend
   clientSecret: xyz
 platform:
-  system: https://tradalia-server:8449/api/system
+  system: https://algotiqa-server:8449/api/system
 messaging:
   address: localhost:8450
   username: rabbit-admin

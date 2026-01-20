@@ -31,7 +31,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tradalia/core/datatype"
+	"github.com/algotiqa/core/datatype"
 )
 
 //=============================================================================
@@ -53,8 +53,8 @@ type FreeCurrencyClient struct {
 func NewFreeCurrencyClient(baseUrl, apiKey string) *FreeCurrencyClient {
 	return &FreeCurrencyClient{
 		baseUrl: baseUrl,
-		apiKey : apiKey,
-		client : &http.Client{
+		apiKey:  apiKey,
+		client: &http.Client{
 			Timeout: 30 * time.Second,
 		},
 	}
@@ -66,24 +66,24 @@ func NewFreeCurrencyClient(baseUrl, apiKey string) *FreeCurrencyClient {
 //===
 //=============================================================================
 
-func (f *FreeCurrencyClient) GetHistoricalValues(date datatype.IntDate, baseCurrency, currencyList string) (*HistoricalResponse,error){
+func (f *FreeCurrencyClient) GetHistoricalValues(date datatype.IntDate, baseCurrency, currencyList string) (*HistoricalResponse, error) {
 	params := map[string]string{}
-	params["date"]          = date.String()
+	params["date"] = date.String()
 	params["base_currency"] = baseCurrency
-	params["currencies"]    = currencyList
+	params["currencies"] = currencyList
 
-	res,err := f.callAPI(Historical, params)
+	res, err := f.callAPI(Historical, params)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
 	var output map[string]interface{}
 	err = json.Unmarshal(res, &output)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
-	return convertHistoricalResponse(output),nil
+	return convertHistoricalResponse(output), nil
 }
 
 //=============================================================================
@@ -92,18 +92,18 @@ func (f *FreeCurrencyClient) GetHistoricalValues(date datatype.IntDate, baseCurr
 //===
 //=============================================================================
 
-func (f *FreeCurrencyClient) callAPI(service string, params map[string]string) ([]byte, error){
-	url := f.baseUrl +"/"+ service +"?"+ mapToQueryParams(params)
+func (f *FreeCurrencyClient) callAPI(service string, params map[string]string) ([]byte, error) {
+	url := f.baseUrl + "/" + service + "?" + mapToQueryParams(params)
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
 	req.Header.Set("apikey", f.apiKey)
 
 	response, err := f.client.Do(req)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
 	// Close the connection to reuse it
@@ -134,13 +134,13 @@ func convertHistoricalResponse(output map[string]interface{}) *HistoricalRespons
 		Currencies: make(map[string]float64),
 	}
 
-	val,ok := output["data"]
+	val, ok := output["data"]
 	if ok {
 		mapVal := val.(map[string]interface{})
-		for k,v := range mapVal {
+		for k, v := range mapVal {
 			res.Date = k
 			mapCur := v.(map[string]interface{})
-			for code,value := range mapCur {
+			for code, value := range mapCur {
 				res.Currencies[code] = value.(float64)
 			}
 		}

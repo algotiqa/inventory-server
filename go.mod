@@ -1,12 +1,12 @@
-module github.com/tradalia/inventory-server
+module github.com/algotiqa/inventory-server
 
 go 1.24.2
 
 require (
 	github.com/gin-gonic/gin v1.11.0
 	github.com/go-sql-driver/mysql v1.9.3 // indirect
-	github.com/tradalia/core v1.11.0
-	github.com/tradalia/sick-engine v0.0.3
+	github.com/algotiqa/core v1.13.0
+	github.com/algotiqa/tiq-engine v0.0.3
 	gorm.io/driver/mysql v1.6.0
 	gorm.io/gorm v1.31.1
 )

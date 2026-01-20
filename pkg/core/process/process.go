@@ -25,15 +25,15 @@ THE SOFTWARE.
 package process
 
 import (
-	"github.com/tradalia/inventory-server/pkg/app"
-	"github.com/tradalia/inventory-server/pkg/core/process/agentscanner"
-	"github.com/tradalia/inventory-server/pkg/core/process/currencyupdater"
+	"github.com/algotiqa/inventory-server/pkg/app"
+	"github.com/algotiqa/inventory-server/pkg/core/process/agentscanner"
+	"github.com/algotiqa/inventory-server/pkg/core/process/currencyupdater"
 )
 
 //=============================================================================
 
 func Init(cfg *app.Config) {
-	agentscanner   .Init(cfg)
+	agentscanner.Init(cfg)
 	currencyupdater.Init(cfg)
 }
 

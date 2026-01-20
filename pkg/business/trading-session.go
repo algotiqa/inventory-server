@@ -26,20 +26,20 @@ package business
 
 import (
 	"encoding/json"
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/inventory-server/pkg/db"
-	"github.com/tradalia/sick-engine/session"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/inventory-server/pkg/db"
+	"github.com/algotiqa/sick-engine/session"
 	"gorm.io/gorm"
 )
 
 //=============================================================================
 
 func GetTradingSessions(tx *gorm.DB, c *auth.Context, filter map[string]any, offset int, limit int) (*[]TradingSession, error) {
-	if ! c.Session.IsAdmin() {
+	if !c.Session.IsAdmin() {
 		filter["username"] = c.Session.Username
 	}
 
-	list,err := db.GetTradingSessions(tx, filter, offset, limit)
+	list, err := db.GetTradingSessions(tx, filter, offset, limit)
 
 	if err != nil {
 		return nil, err
@@ -50,17 +50,17 @@ func GetTradingSessions(tx *gorm.DB, c *auth.Context, filter map[string]any, off
 	for _, dbTs := range *list {
 		var sickTs session.TradingSession
 
-		err = json.Unmarshal([]byte(dbTs.Config),&sickTs)
+		err = json.Unmarshal([]byte(dbTs.Config), &sickTs)
 		if err != nil {
 			c.Log.Error("GetTradingSessions: Invalid session config", "error", err.Error())
 			return nil, err
 		}
 
 		busTs := TradingSession{
-			Common  : dbTs.Common,
-			Name    : dbTs.Name,
+			Common:   dbTs.Common,
+			Name:     dbTs.Name,
 			Username: dbTs.Username,
-			Session : &sickTs,
+			Session:  &sickTs,
 		}
 
 		res = append(res, busTs)

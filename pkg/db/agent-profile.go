@@ -25,8 +25,8 @@ THE SOFTWARE.
 package db
 
 import (
-"github.com/tradalia/core/req"
-"gorm.io/gorm"
+	"github.com/algotiqa/core/req"
+	"gorm.io/gorm"
 )
 
 //=============================================================================

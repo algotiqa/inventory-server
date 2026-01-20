@@ -25,7 +25,7 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/tradalia/inventory-server/pkg/db"
+	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
 

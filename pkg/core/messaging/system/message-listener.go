@@ -26,8 +26,8 @@ package system
 
 import (
 	"encoding/json"
-	"github.com/tradalia/core/msg"
-	"github.com/tradalia/inventory-server/pkg/db"
+	"github.com/algotiqa/core/msg"
+	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 	"log/slog"
 )

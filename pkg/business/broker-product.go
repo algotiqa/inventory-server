@@ -25,17 +25,17 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/core/msg"
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/inventory-server/pkg/db"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/msg"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
 
 //=============================================================================
 
 func GetBrokerProducts(tx *gorm.DB, c *auth.Context, filter map[string]any, offset int, limit int, details bool) (*[]db.BrokerProductFull, error) {
-	if ! c.Session.IsAdmin() {
+	if !c.Session.IsAdmin() {
 		filter["username"] = c.Session.Username
 	}
 
@@ -89,17 +89,17 @@ func AddBrokerProduct(tx *gorm.DB, c *auth.Context, bps *BrokerProductSpec) (*db
 	c.Log.Info("AddBrokerProduct: Adding a new broker product", "symbol", bps.Symbol, "name", bps.Name)
 
 	var pb db.BrokerProduct
-	pb.ConnectionId     = bps.ConnectionId
-	pb.ExchangeId       = bps.ExchangeId
-	pb.Username         = c.Session.Username
-	pb.Symbol           = bps.Symbol
-	pb.Name             = bps.Name
-	pb.PointValue       = bps.PointValue
+	pb.ConnectionId = bps.ConnectionId
+	pb.ExchangeId = bps.ExchangeId
+	pb.Username = c.Session.Username
+	pb.Symbol = bps.Symbol
+	pb.Name = bps.Name
+	pb.PointValue = bps.PointValue
 	pb.CostPerOperation = bps.CostPerOperation
-	pb.MarginValue      = bps.MarginValue
-	pb.Increment        = bps.Increment
-	pb.MarketType       = bps.MarketType
-	pb.ProductType      = bps.ProductType
+	pb.MarginValue = bps.MarginValue
+	pb.Increment = bps.Increment
+	pb.MarketType = bps.MarketType
+	pb.ProductType = bps.ProductType
 
 	err := db.AddBrokerProduct(tx, &pb)
 
@@ -127,15 +127,15 @@ func UpdateBrokerProduct(tx *gorm.DB, c *auth.Context, id uint, pbs *BrokerProdu
 		return nil, err
 	}
 
-	pb.ExchangeId      = pbs.ExchangeId
-	pb.Symbol          = pbs.Symbol
-	pb.Name            = pbs.Name
-	pb.PointValue      = pbs.PointValue
-	pb.CostPerOperation= pbs.CostPerOperation
-	pb.MarginValue     = pbs.MarginValue
-	pb.Increment       = pbs.Increment
-	pb.MarketType      = pbs.MarketType
-	pb.ProductType     = pbs.ProductType
+	pb.ExchangeId = pbs.ExchangeId
+	pb.Symbol = pbs.Symbol
+	pb.Name = pbs.Name
+	pb.PointValue = pbs.PointValue
+	pb.CostPerOperation = pbs.CostPerOperation
+	pb.MarginValue = pbs.MarginValue
+	pb.Increment = pbs.Increment
+	pb.MarketType = pbs.MarketType
+	pb.ProductType = pbs.ProductType
 
 	err = db.UpdateBrokerProduct(tx, pb)
 	if err != nil {
@@ -161,16 +161,16 @@ func getBrokerProductAndCheckAccess(tx *gorm.DB, c *auth.Context, id uint, funct
 	pb, err := db.GetBrokerProductById(tx, id)
 
 	if err != nil {
-		c.Log.Error(function +": Could not retrieve broker product", "error", err.Error())
+		c.Log.Error(function+": Could not retrieve broker product", "error", err.Error())
 		return nil, err
 	}
 
 	if pb == nil {
-		c.Log.Error(function +": Broker product was not found", "id", id)
+		c.Log.Error(function+": Broker product was not found", "id", id)
 		return nil, req.NewNotFoundError("Broker product was not found: %v", id)
 	}
 
-	if ! c.Session.IsAdmin() {
+	if !c.Session.IsAdmin() {
 		if pb.Username != c.Session.Username {
 			c.Log.Error(function+": Broker product not owned by user", "id", id)
 			return nil, req.NewForbiddenError("Broker product is not owned by user: %v", id)
@@ -205,7 +205,7 @@ func sendBrokerProductChangeMessage(tx *gorm.DB, c *auth.Context, pb *db.BrokerP
 		return err
 	}
 
-	pbm := BrokerProductMessage{*pb, *conn, *exc, *cur }
+	pbm := BrokerProductMessage{*pb, *conn, *exc, *cur}
 	err = msg.SendMessage(msg.ExInventory, msg.SourceBrokerProduct, msgType, &pbm)
 
 	if err != nil {

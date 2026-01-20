@@ -27,14 +27,14 @@ package main
 import (
 	"log/slog"
 
-	"github.com/tradalia/core/boot"
-	"github.com/tradalia/core/msg"
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/inventory-server/pkg/app"
-	"github.com/tradalia/inventory-server/pkg/core/messaging/system"
-	"github.com/tradalia/inventory-server/pkg/core/process"
-	"github.com/tradalia/inventory-server/pkg/db"
-	"github.com/tradalia/inventory-server/pkg/service"
+	"github.com/algotiqa/core/boot"
+	"github.com/algotiqa/core/msg"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/inventory-server/pkg/app"
+	"github.com/algotiqa/inventory-server/pkg/core/messaging/system"
+	"github.com/algotiqa/inventory-server/pkg/core/process"
+	"github.com/algotiqa/inventory-server/pkg/db"
+	"github.com/algotiqa/inventory-server/pkg/service"
 )
 
 //=============================================================================
@@ -47,7 +47,7 @@ func main() {
 	cfg := &app.Config{}
 	boot.ReadConfig(component, cfg)
 	logger := boot.InitLogger(component, &cfg.Application)
-	engine := boot.InitEngine(logger,    &cfg.Application)
+	engine := boot.InitEngine(logger, &cfg.Application)
 	initClients()
 	db.InitDatabase(&cfg.Database)
 	msg.InitMessaging(&cfg.Messaging)

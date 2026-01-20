@@ -25,17 +25,17 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/core/msg"
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/inventory-server/pkg/db"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/msg"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
 
 //=============================================================================
 
 func GetTradingSystems(tx *gorm.DB, c *auth.Context, filter map[string]any, offset int, limit int, details bool) (*[]db.TradingSystemFull, error) {
-	if ! c.Session.IsAdmin() {
+	if !c.Session.IsAdmin() {
 		filter["username"] = c.Session.Username
 	}
 
@@ -54,17 +54,17 @@ func AddTradingSystem(tx *gorm.DB, c *auth.Context, tss *TradingSystemSpec) (*db
 	//TODO: validate type
 
 	var ts db.TradingSystem
-	ts.Username         = c.Session.Username
-	ts.DataProductId    = tss.DataProductId
-	ts.BrokerProductId  = tss.BrokerProductId
+	ts.Username = c.Session.Username
+	ts.DataProductId = tss.DataProductId
+	ts.BrokerProductId = tss.BrokerProductId
 	ts.TradingSessionId = tss.TradingSessionId
-	ts.AgentProfileId   = tss.AgentProfileId
-	ts.Name             = tss.Name
-	ts.Timeframe        = tss.Timeframe
-	ts.StrategyType     = tss.StrategyType
-	ts.Overnight        = tss.Overnight
-	ts.Tags             = tss.Tags
-	ts.ExternalRef      = tss.ExternalRef
+	ts.AgentProfileId = tss.AgentProfileId
+	ts.Name = tss.Name
+	ts.Timeframe = tss.Timeframe
+	ts.StrategyType = tss.StrategyType
+	ts.Overnight = tss.Overnight
+	ts.Tags = tss.Tags
+	ts.ExternalRef = tss.ExternalRef
 
 	err := db.AddTradingSystem(tx, &ts)
 	if err != nil {
@@ -93,16 +93,16 @@ func UpdateTradingSystem(tx *gorm.DB, c *auth.Context, id uint, tss *TradingSyst
 
 	//TODO: validate type
 
-	ts.DataProductId     = tss.DataProductId
-	ts.BrokerProductId   = tss.BrokerProductId
-	ts.TradingSessionId  = tss.TradingSessionId
-	ts.AgentProfileId    = tss.AgentProfileId
-	ts.Name              = tss.Name
-	ts.Timeframe         = tss.Timeframe
-	ts.StrategyType      = tss.StrategyType
-	ts.Overnight         = tss.Overnight
-	ts.Tags              = tss.Tags
-	ts.ExternalRef       = tss.ExternalRef
+	ts.DataProductId = tss.DataProductId
+	ts.BrokerProductId = tss.BrokerProductId
+	ts.TradingSessionId = tss.TradingSessionId
+	ts.AgentProfileId = tss.AgentProfileId
+	ts.Name = tss.Name
+	ts.Timeframe = tss.Timeframe
+	ts.StrategyType = tss.StrategyType
+	ts.Overnight = tss.Overnight
+	ts.Tags = tss.Tags
+	ts.ExternalRef = tss.ExternalRef
 
 	err = db.UpdateTradingSystem(tx, ts)
 	if err != nil {
@@ -132,7 +132,7 @@ func DeleteTradingSystem(tx *gorm.DB, c *auth.Context, id uint) (*db.TradingSyst
 	err = db.DeleteTradingSystem(tx, id)
 	if err != nil {
 		c.Log.Error("DeleteTradingSystem: Cannot delete trading system", "id", id, "error", err.Error())
-		return nil,req.NewServerErrorByError(err)
+		return nil, req.NewServerErrorByError(err)
 	}
 
 	tsm := TradingSystemMessage{}
@@ -141,7 +141,7 @@ func DeleteTradingSystem(tx *gorm.DB, c *auth.Context, id uint) (*db.TradingSyst
 
 	if err != nil {
 		c.Log.Error("DeleteTradingSystem: Could not publish the delete message", "id", id, "error", err.Error())
-		return nil,req.NewServerErrorByError(err)
+		return nil, req.NewServerErrorByError(err)
 	}
 
 	c.Log.Info("DeleteTradingSystem: Trading system deleted", "id", id, "name", ts.Name)
@@ -151,14 +151,14 @@ func DeleteTradingSystem(tx *gorm.DB, c *auth.Context, id uint) (*db.TradingSyst
 //=============================================================================
 
 const (
-	ResponseStatusOk     = "ok"
-	ResponseStatusSkipped= "skipped"
+	ResponseStatusOk      = "ok"
+	ResponseStatusSkipped = "skipped"
 )
 
 //-----------------------------------------------------------------------------
 
 type FinalizationResponse struct {
-	Status  string `json:"status"`
+	Status string `json:"status"`
 }
 
 //-----------------------------------------------------------------------------
@@ -181,7 +181,7 @@ func FinalizeTradingSystem(tx *gorm.DB, c *auth.Context, id uint) (*Finalization
 	err = db.UpdateTradingSystem(tx, ts)
 	if err != nil {
 		c.Log.Error("FinalizeTradingSystem: Cannot finalize trading system", "id", id, "error", err.Error())
-		return nil,req.NewServerErrorByError(err)
+		return nil, req.NewServerErrorByError(err)
 	}
 
 	err = sendChangeMessage(tx, c, ts, msg.TypeUpdate)
@@ -204,18 +204,18 @@ func FinalizeTradingSystem(tx *gorm.DB, c *auth.Context, id uint) (*Finalization
 func getTradingSystem(tx *gorm.DB, c *auth.Context, id uint, funcName string) (*db.TradingSystem, error) {
 	ts, err := db.GetTradingSystemById(tx, id)
 	if err != nil {
-		c.Log.Error(funcName+ ": Could not retrieve trading system", "error", err.Error())
-		return nil,req.NewServerErrorByError(err)
+		c.Log.Error(funcName+": Could not retrieve trading system", "error", err.Error())
+		return nil, req.NewServerErrorByError(err)
 	}
 
 	if ts == nil {
-		c.Log.Error(funcName +": Trading system was not found", "id", id)
-		return nil,req.NewNotFoundError("Trading system was not found: %v", id)
+		c.Log.Error(funcName+": Trading system was not found", "id", id)
+		return nil, req.NewNotFoundError("Trading system was not found: %v", id)
 	}
 
 	if ts.Username != c.Session.Username {
-		c.Log.Error(funcName +": Trading system not owned by user", "id", id)
-		return nil,req.NewForbiddenError("Trading system is not owned by user: %v", id)
+		c.Log.Error(funcName+": Trading system not owned by user", "id", id)
+		return nil, req.NewForbiddenError("Trading system is not owned by user: %v", id)
 	}
 
 	return ts, nil

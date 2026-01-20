@@ -25,17 +25,17 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/core/msg"
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/inventory-server/pkg/db"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/msg"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
 
 //=============================================================================
 
 func GetDataProducts(tx *gorm.DB, c *auth.Context, filter map[string]any, offset int, limit int, details bool) (*[]db.DataProductFull, error) {
-	if ! c.Session.IsAdmin() {
+	if !c.Session.IsAdmin() {
 		filter["username"] = c.Session.Username
 	}
 
@@ -66,7 +66,7 @@ func GetDataProductById(tx *gorm.DB, c *auth.Context, id uint) (*DataProductExt,
 
 	//--- Get exchange
 
-	exc, err  := db.GetExchangeById(tx, pd.ExchangeId)
+	exc, err := db.GetExchangeById(tx, pd.ExchangeId)
 	if err != nil {
 		c.Log.Error("GetDataProductById: Could not retrieve exchange", "error", err.Error())
 		return nil, err
@@ -74,8 +74,8 @@ func GetDataProductById(tx *gorm.DB, c *auth.Context, id uint) (*DataProductExt,
 
 	pde := DataProductExt{
 		DataProduct: *pd,
-		Connection : *conn,
-		Exchange   : *exc,
+		Connection:  *conn,
+		Exchange:    *exc,
 	}
 
 	return &pde, nil
@@ -87,14 +87,14 @@ func AddDataProduct(tx *gorm.DB, c *auth.Context, pds *DataProductSpec) (*db.Dat
 	c.Log.Info("AddDataProduct: Adding a new data product", "symbol", pds.Symbol, "name", pds.Name)
 
 	var pd db.DataProduct
-	pd.ConnectionId    = pds.ConnectionId
-	pd.ExchangeId      = pds.ExchangeId
-	pd.Username        = c.Session.Username
-	pd.Symbol          = pds.Symbol
-	pd.Name            = pds.Name
-	pd.MarketType      = pds.MarketType
-	pd.ProductType     = pds.ProductType
-	pd.Months          = pds.Months
+	pd.ConnectionId = pds.ConnectionId
+	pd.ExchangeId = pds.ExchangeId
+	pd.Username = c.Session.Username
+	pd.Symbol = pds.Symbol
+	pd.Name = pds.Name
+	pd.MarketType = pds.MarketType
+	pd.ProductType = pds.ProductType
+	pd.Months = pds.Months
 	pd.RolloverTrigger = pds.RolloverTrigger
 
 	//TODO: validate rollover trigger
@@ -127,8 +127,8 @@ func UpdateDataProduct(tx *gorm.DB, c *auth.Context, id uint, pds *DataProductSp
 
 	//--- We can't change the exchange and the symbol
 
-	pd.Name        = pds.Name
-	pd.MarketType  = pds.MarketType
+	pd.Name = pds.Name
+	pd.MarketType = pds.MarketType
 	pd.ProductType = pds.ProductType
 
 	//TODO: Should we allow to modify these? Some recomputation is required
@@ -159,18 +159,18 @@ func getDataProductAndCheckAccess(tx *gorm.DB, c *auth.Context, id uint, functio
 	pd, err := db.GetDataProductById(tx, id)
 
 	if err != nil {
-		c.Log.Error(function +": Could not retrieve data product", "error", err.Error())
+		c.Log.Error(function+": Could not retrieve data product", "error", err.Error())
 		return nil, err
 	}
 
 	if pd == nil {
-		c.Log.Error(function +": Data product was not found", "id", id)
+		c.Log.Error(function+": Data product was not found", "id", id)
 		return nil, req.NewNotFoundError("Data product was not found: %v", id)
 	}
 
-	if ! c.Session.IsAdmin() {
+	if !c.Session.IsAdmin() {
 		if pd.Username != c.Session.Username {
-			c.Log.Error(function +": Data product not owned by user", "id", id)
+			c.Log.Error(function+": Data product not owned by user", "id", id)
 			return nil, req.NewForbiddenError("Data product is not owned by user: %v", id)
 		}
 	}

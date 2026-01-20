@@ -25,9 +25,9 @@ THE SOFTWARE.
 package service
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/inventory-server/pkg/business"
-	"github.com/tradalia/inventory-server/pkg/db"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/inventory-server/pkg/business"
+	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -55,7 +55,7 @@ func getConnections(c *auth.Context) {
 //=============================================================================
 
 func getConnectionById(c *auth.Context) {
-	id,err := c.GetIdFromUrl()
+	id, err := c.GetIdFromUrl()
 
 	if err == nil {
 		err = db.RunInTransaction(func(tx *gorm.DB) error {
@@ -101,7 +101,7 @@ func updateConnection(c *auth.Context) {
 
 	if err == nil {
 		var id uint
-		id,err = c.GetIdFromUrl()
+		id, err = c.GetIdFromUrl()
 
 		if err == nil {
 			err = db.RunInTransaction(func(tx *gorm.DB) error {
@@ -122,11 +122,11 @@ func updateConnection(c *auth.Context) {
 //=============================================================================
 
 func deleteConnection(c *auth.Context) {
-	id,err := c.GetIdFromUrl()
+	id, err := c.GetIdFromUrl()
 
 	if err == nil {
 		err = db.RunInTransaction(func(tx *gorm.DB) error {
-			ts,err := business.DeleteConnection(tx, c, id)
+			ts, err := business.DeleteConnection(tx, c, id)
 
 			if err != nil {
 				return err

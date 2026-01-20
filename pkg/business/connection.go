@@ -25,18 +25,18 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/core/msg"
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/inventory-server/pkg/db"
-	"github.com/tradalia/inventory-server/pkg/platform"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/msg"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/inventory-server/pkg/db"
+	"github.com/algotiqa/inventory-server/pkg/platform"
 	"gorm.io/gorm"
 )
 
 //=============================================================================
 
 func GetConnections(tx *gorm.DB, c *auth.Context, filter map[string]any, offset int, limit int) (*[]db.Connection, error) {
-	if ! c.Session.IsAdmin() {
+	if !c.Session.IsAdmin() {
 		filter["username"] = c.Session.Username
 	}
 
@@ -45,7 +45,7 @@ func GetConnections(tx *gorm.DB, c *auth.Context, filter map[string]any, offset 
 
 //=============================================================================
 
-func GetConnectionById(tx *gorm.DB, c *auth.Context, id uint) (*db.Connection, error){
+func GetConnectionById(tx *gorm.DB, c *auth.Context, id uint) (*db.Connection, error) {
 	conn, err := db.GetConnectionById(tx, id)
 	if err != nil {
 		return nil, err
@@ -55,7 +55,7 @@ func GetConnectionById(tx *gorm.DB, c *auth.Context, id uint) (*db.Connection, e
 		return nil, req.NewNotFoundError("Connection with id='%v' was not found", id)
 	}
 
-	if ! c.Session.IsAdmin() {
+	if !c.Session.IsAdmin() {
 		if c.Session.Username != conn.Username {
 			return nil, req.NewForbiddenError("Connection with id='%v' is not owned by the user", id)
 		}
@@ -81,17 +81,17 @@ func AddConnection(tx *gorm.DB, c *auth.Context, cs *ConnectionSpec) (*db.Connec
 	}
 
 	var conn db.Connection
-	conn.Username             = c.Session.Username
-	conn.Code                 = cs.Code
-	conn.Name                 = cs.Name
-	conn.SystemCode           = cs.SystemCode
-	conn.SystemConfigParams   = cs.SystemConfigParams
-	conn.SystemName           = sys.Name
-	conn.SupportsData         = sys.SupportsData
-	conn.SupportsBroker       = sys.SupportsBroker
+	conn.Username = c.Session.Username
+	conn.Code = cs.Code
+	conn.Name = cs.Name
+	conn.SystemCode = cs.SystemCode
+	conn.SystemConfigParams = cs.SystemConfigParams
+	conn.SystemName = sys.Name
+	conn.SupportsData = sys.SupportsData
+	conn.SupportsBroker = sys.SupportsBroker
 	conn.SupportsMultipleData = sys.SupportsMultipleData
-	conn.SupportsInventory    = sys.SupportsInventory
-	conn.Connected            = conn.SupportsMultipleData
+	conn.SupportsInventory = sys.SupportsInventory
+	conn.Connected = conn.SupportsMultipleData
 
 	err = db.AddConnection(tx, &conn)
 
@@ -114,8 +114,8 @@ func UpdateConnection(tx *gorm.DB, c *auth.Context, id uint, cs *ConnectionSpec)
 		return nil, err
 	}
 
-	conn.Name                = cs.Name
-	conn.SystemConfigParams  = cs.SystemConfigParams
+	conn.Name = cs.Name
+	conn.SystemConfigParams = cs.SystemConfigParams
 
 	err = db.UpdateConnection(tx, conn)
 	if err != nil {
@@ -140,7 +140,7 @@ func DeleteConnection(tx *gorm.DB, c *auth.Context, id uint) (*db.Connection, er
 	err = db.DeleteTradingSystem(tx, id)
 	if err != nil {
 		c.Log.Error("DeleteTradingSystem: Cannot delete trading system", "id", id, "error", err.Error())
-		return nil,req.NewServerErrorByError(err)
+		return nil, req.NewServerErrorByError(err)
 	}
 
 	tsm := TradingSystemMessage{}
@@ -149,12 +149,12 @@ func DeleteConnection(tx *gorm.DB, c *auth.Context, id uint) (*db.Connection, er
 
 	if err != nil {
 		c.Log.Error("DeleteTradingSystem: Could not publish the delete message", "id", id, "error", err.Error())
-		return nil,req.NewServerErrorByError(err)
+		return nil, req.NewServerErrorByError(err)
 	}
 
 	c.Log.Info("DeleteTradingSystem: Trading system deleted", "id", id, "name", ts.Name)
-//	return ts, nil
-	return nil,nil
+	//	return ts, nil
+	return nil, nil
 }
 
 //=============================================================================
@@ -167,16 +167,16 @@ func getConnectionAndCheckAccess(tx *gorm.DB, c *auth.Context, id uint, function
 	conn, err := db.GetConnectionById(tx, id)
 
 	if err != nil {
-		c.Log.Error(function +": Could not retrieve connection", "error", err.Error())
+		c.Log.Error(function+": Could not retrieve connection", "error", err.Error())
 		return nil, err
 	}
 
 	if conn == nil {
-		c.Log.Error(function +": Connection was not found", "id", id)
+		c.Log.Error(function+": Connection was not found", "id", id)
 		return nil, req.NewNotFoundError("Connection was not found: %v", id)
 	}
 
-	if ! c.Session.IsAdmin() {
+	if !c.Session.IsAdmin() {
 		if conn.Username != c.Session.Username {
 			c.Log.Error(function+": Connection not owned by user", "id", id)
 			return nil, req.NewForbiddenError("Connection is not owned by user: %v", id)

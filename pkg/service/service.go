@@ -25,10 +25,10 @@ THE SOFTWARE.
 package service
 
 import (
-	"github.com/tradalia/core/auth"
-	"github.com/tradalia/core/auth/roles"
-	"github.com/tradalia/core/req"
-	"github.com/tradalia/inventory-server/pkg/app"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/auth/roles"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/inventory-server/pkg/app"
 	"github.com/gin-gonic/gin"
 	"log/slog"
 )
@@ -41,35 +41,35 @@ func Init(router *gin.Engine, cfg *app.Config, logger *slog.Logger) {
 
 	//--- Inventory
 
-	router.GET ("/api/inventory/v1/currencies",               ctrl.Secure(getCurrencies,          roles.Admin_User_Service))
-	router.GET ("/api/inventory/v1/exchanges",                ctrl.Secure(getExchanges,           roles.Admin_User_Service))
+	router.GET("/api/inventory/v1/currencies", ctrl.Secure(getCurrencies, roles.Admin_User_Service))
+	router.GET("/api/inventory/v1/exchanges", ctrl.Secure(getExchanges, roles.Admin_User_Service))
 
-	router.GET ("/api/inventory/v1/data-products",            ctrl.Secure(getDataProducts,        roles.Admin_User_Service))
-	router.POST("/api/inventory/v1/data-products",            ctrl.Secure(addDataProduct,         roles.Admin_User_Service))
-	router.GET ("/api/inventory/v1/data-products/:id",        ctrl.Secure(getDataProductById,     roles.Admin_User_Service))
-	router.PUT ("/api/inventory/v1/data-products/:id",        ctrl.Secure(updateDataProduct,      roles.Admin_User_Service))
+	router.GET("/api/inventory/v1/data-products", ctrl.Secure(getDataProducts, roles.Admin_User_Service))
+	router.POST("/api/inventory/v1/data-products", ctrl.Secure(addDataProduct, roles.Admin_User_Service))
+	router.GET("/api/inventory/v1/data-products/:id", ctrl.Secure(getDataProductById, roles.Admin_User_Service))
+	router.PUT("/api/inventory/v1/data-products/:id", ctrl.Secure(updateDataProduct, roles.Admin_User_Service))
 
-	router.GET ("/api/inventory/v1/broker-products",          ctrl.Secure(getBrokerProducts,      roles.Admin_User_Service))
-	router.POST("/api/inventory/v1/broker-products",          ctrl.Secure(addBrokerProduct,       roles.Admin_User_Service))
-	router.GET ("/api/inventory/v1/broker-products/:id",      ctrl.Secure(getBrokerProductById,   roles.Admin_User_Service))
-	router.PUT ("/api/inventory/v1/broker-products/:id",      ctrl.Secure(updateBrokerProduct,    roles.Admin_User_Service))
+	router.GET("/api/inventory/v1/broker-products", ctrl.Secure(getBrokerProducts, roles.Admin_User_Service))
+	router.POST("/api/inventory/v1/broker-products", ctrl.Secure(addBrokerProduct, roles.Admin_User_Service))
+	router.GET("/api/inventory/v1/broker-products/:id", ctrl.Secure(getBrokerProductById, roles.Admin_User_Service))
+	router.PUT("/api/inventory/v1/broker-products/:id", ctrl.Secure(updateBrokerProduct, roles.Admin_User_Service))
 
-	router.GET   ("/api/inventory/v1/trading-systems",              ctrl.Secure(getTradingSystems,      roles.Admin_User_Service))
-	router.POST  ("/api/inventory/v1/trading-systems",              ctrl.Secure(addTradingSystem,       roles.Admin_User_Service))
-	router.PUT   ("/api/inventory/v1/trading-systems/:id",          ctrl.Secure(updateTradingSystem,    roles.Admin_User_Service))
-	router.DELETE("/api/inventory/v1/trading-systems/:id",          ctrl.Secure(deleteTradingSystem,    roles.Admin_User_Service))
-	router.POST  ("/api/inventory/v1/trading-systems/:id/finalize", ctrl.Secure(finalizeTradingSystem,  roles.Admin_User_Service))
+	router.GET("/api/inventory/v1/trading-systems", ctrl.Secure(getTradingSystems, roles.Admin_User_Service))
+	router.POST("/api/inventory/v1/trading-systems", ctrl.Secure(addTradingSystem, roles.Admin_User_Service))
+	router.PUT("/api/inventory/v1/trading-systems/:id", ctrl.Secure(updateTradingSystem, roles.Admin_User_Service))
+	router.DELETE("/api/inventory/v1/trading-systems/:id", ctrl.Secure(deleteTradingSystem, roles.Admin_User_Service))
+	router.POST("/api/inventory/v1/trading-systems/:id/finalize", ctrl.Secure(finalizeTradingSystem, roles.Admin_User_Service))
 
-	router.GET   ("/api/inventory/v1/trading-sessions",       ctrl.Secure(getTradingSessions,     roles.Admin_User_Service))
-	router.GET   ("/api/inventory/v1/agent-profiles",         ctrl.Secure(getAgentProfiles,       roles.Admin_User_Service))
+	router.GET("/api/inventory/v1/trading-sessions", ctrl.Secure(getTradingSessions, roles.Admin_User_Service))
+	router.GET("/api/inventory/v1/agent-profiles", ctrl.Secure(getAgentProfiles, roles.Admin_User_Service))
 
 	//--- Administration
 
-	router.GET   ("/api/inventory/v1/connections",         ctrl.Secure(getConnections,      roles.Admin_User_Service))
-	router.GET   ("/api/inventory/v1/connections/:id",     ctrl.Secure(getConnectionById,   roles.Admin_User_Service))
-	router.POST  ("/api/inventory/v1/connections",         ctrl.Secure(addConnection,       roles.Admin_User_Service))
-	router.PUT   ("/api/inventory/v1/connections/:id",     ctrl.Secure(updateConnection,    roles.Admin_User_Service))
-	router.DELETE("/api/inventory/v1/connections/:id",     ctrl.Secure(deleteConnection,    roles.Admin_User_Service))
+	router.GET("/api/inventory/v1/connections", ctrl.Secure(getConnections, roles.Admin_User_Service))
+	router.GET("/api/inventory/v1/connections/:id", ctrl.Secure(getConnectionById, roles.Admin_User_Service))
+	router.POST("/api/inventory/v1/connections", ctrl.Secure(addConnection, roles.Admin_User_Service))
+	router.PUT("/api/inventory/v1/connections/:id", ctrl.Secure(updateConnection, roles.Admin_User_Service))
+	router.DELETE("/api/inventory/v1/connections/:id", ctrl.Secure(deleteConnection, roles.Admin_User_Service))
 }
 
 //=============================================================================

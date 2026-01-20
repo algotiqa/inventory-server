@@ -29,9 +29,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/tradalia/core/datatype"
-	"github.com/tradalia/inventory-server/pkg/app"
-	"github.com/tradalia/inventory-server/pkg/db"
+	"github.com/algotiqa/core/datatype"
+	"github.com/algotiqa/inventory-server/pkg/app"
+	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -42,13 +42,13 @@ const (
 )
 
 var baseUrl string
-var apiKey  string
+var apiKey string
 
 //=============================================================================
 
 func Init(cfg *app.Config) {
 	baseUrl = cfg.Provider.Currency.BaseUrl
-	apiKey  = cfg.Provider.Currency.ApiKey
+	apiKey = cfg.Provider.Currency.ApiKey
 
 	ticker := time.NewTicker(45 * time.Minute)
 
@@ -67,19 +67,19 @@ func Init(cfg *app.Config) {
 func run() {
 	slog.Info("CurrencyUpdater: Starting sync process")
 
-	currencies,err := getCurrencies()
+	currencies, err := getCurrencies()
 	if err == nil {
 		//--- This is BaseCurrency (USD)
 		cur := currencies[0]
 
 		var history []*db.CurrencyHistory
 
-		if cur.LastDate.IsNil(){
-			history,err = latestUpdate(currencies, datatype.Today(time.UTC).AddDays(-1))
+		if cur.LastDate.IsNil() {
+			history, err = latestUpdate(currencies, datatype.Today(time.UTC).AddDays(-1))
 		} else if newLatestDay(cur) {
-			history,err = latestUpdate(currencies, cur.LastDate.AddDays(1))
+			history, err = latestUpdate(currencies, cur.LastDate.AddDays(1))
 		} else if !cur.HistoryEnded {
-			history,err = dateUpdate(currencies, cur.FirstDate.AddDays(-1))
+			history, err = dateUpdate(currencies, cur.FirstDate.AddDays(-1))
 		}
 
 		if err == nil {
@@ -97,7 +97,7 @@ func getCurrencies() ([]*db.Currency, error) {
 
 	err := db.RunInTransaction(func(tx *gorm.DB) error {
 		var err error
-		list,err = db.GetCurrencies(tx)
+		list, err = db.GetCurrencies(tx)
 		return err
 	})
 
@@ -123,9 +123,9 @@ func newLatestDay(cur *db.Currency) bool {
 
 //=============================================================================
 
-func latestUpdate(currencies []*db.Currency, date datatype.IntDate) ([]*db.CurrencyHistory,error) {
+func latestUpdate(currencies []*db.Currency, date datatype.IntDate) ([]*db.CurrencyHistory, error) {
 	fcc := NewFreeCurrencyClient(baseUrl, apiKey)
-	res,err := fcc.GetHistoricalValues(date, BaseCurrency, toList(currencies))
+	res, err := fcc.GetHistoricalValues(date, BaseCurrency, toList(currencies))
 	if err != nil {
 		slog.Error("latestUpdate: Cannot retrieve currencies from provider", "error", err, "date", date)
 		return nil, err
@@ -133,7 +133,7 @@ func latestUpdate(currencies []*db.Currency, date datatype.IntDate) ([]*db.Curre
 
 	var history []*db.CurrencyHistory
 
-	for _,cur := range currencies {
+	for _, cur := range currencies {
 		if cur.FirstDate.IsNil() {
 			cur.FirstDate = date
 		}
@@ -145,22 +145,22 @@ func latestUpdate(currencies []*db.Currency, date datatype.IntDate) ([]*db.Curre
 
 			ci := &db.CurrencyHistory{
 				CurrencyId: cur.Id,
-				Date      : date,
-				Value     : value,
+				Date:       date,
+				Value:      value,
 			}
 
 			history = append(history, ci)
 		}
 	}
 
-	return history,nil
+	return history, nil
 }
 
 //=============================================================================
 
-func dateUpdate(currencies []*db.Currency, date datatype.IntDate) ([]*db.CurrencyHistory,error) {
+func dateUpdate(currencies []*db.Currency, date datatype.IntDate) ([]*db.CurrencyHistory, error) {
 	fcc := NewFreeCurrencyClient(baseUrl, apiKey)
-	res,err := fcc.GetHistoricalValues(date, BaseCurrency, toList(currencies))
+	res, err := fcc.GetHistoricalValues(date, BaseCurrency, toList(currencies))
 	if err != nil {
 		slog.Error("dateUpdate: Cannot retrieve currencies from provider", "error", err, "date", date)
 		return nil, err
@@ -168,8 +168,8 @@ func dateUpdate(currencies []*db.Currency, date datatype.IntDate) ([]*db.Currenc
 
 	var history []*db.CurrencyHistory
 
-	for _,cur := range currencies {
-		cur.FirstDate    = date
+	for _, cur := range currencies {
+		cur.FirstDate = date
 		cur.HistoryEnded = date == 20000101
 
 		value, ok := res.Currencies[cur.Code]
@@ -177,15 +177,15 @@ func dateUpdate(currencies []*db.Currency, date datatype.IntDate) ([]*db.Currenc
 		if ok {
 			ci := &db.CurrencyHistory{
 				CurrencyId: cur.Id,
-				Date      : date,
-				Value     : value,
+				Date:       date,
+				Value:      value,
 			}
 
 			history = append(history, ci)
 		}
 	}
 
-	return history,nil
+	return history, nil
 }
 
 //=============================================================================
