@@ -15,8 +15,8 @@ platform:
   system: https://algotiqa-server:8449/api/system
 messaging:
   address: localhost:8450
-  username: rabbit-admin
-  password: rabbit.admin
+  username: admin
+  password: admin
 provider:
   currency:
     baseUrl: https://api.freecurrencyapi.com/v1
