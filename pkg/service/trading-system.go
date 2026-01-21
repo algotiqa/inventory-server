@@ -43,10 +43,10 @@ func getTradingSystems(c *auth.Context) {
 
 		if err == nil {
 			err = db.RunInTransaction(func(tx *gorm.DB) error {
-				list, err := business.GetTradingSystems(tx, c, filter, offset, limit, details)
+				list, terr := business.GetTradingSystems(tx, c, filter, offset, limit, details)
 
-				if err != nil {
-					return err
+				if terr != nil {
+					return terr
 				}
 
 				return c.ReturnList(list, offset, limit, len(*list))
@@ -65,10 +65,10 @@ func addTradingSystem(c *auth.Context) {
 
 	if err == nil {
 		err = db.RunInTransaction(func(tx *gorm.DB) error {
-			ts, err := business.AddTradingSystem(tx, c, &tss)
+			ts, terr := business.AddTradingSystem(tx, c, &tss)
 
-			if err != nil {
-				return err
+			if terr != nil {
+				return terr
 			}
 
 			return c.ReturnObject(ts)

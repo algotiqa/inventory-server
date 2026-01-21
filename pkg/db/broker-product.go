@@ -46,13 +46,14 @@ func GetBrokerProducts(tx *gorm.DB, filter map[string]any, offset int, limit int
 
 func GetBrokerProductsFull(tx *gorm.DB, filter map[string]any, offset int, limit int) (*[]BrokerProductFull, error) {
 	var list []BrokerProductFull
-	query := "SELECT bp.*, m.code as currency_code, c.code as connection_code, c.name as connection_name, e.code as exchange_code, c.system_code as system_code " +
-		"FROM broker_product bp " +
-		"LEFT JOIN connection c on bp.connection_id = c.id " +
-		"LEFT JOIN exchange   e on bp.exchange_id   = e.id " +
-		"LEFT JOIN currency   m on  e.currency_id   = m.id "
-
-	res := tx.Raw(query).Where(filter).Offset(offset).Limit(limit).Find(&list)
+	res := tx.Model(&BrokerProduct{}).Select("broker_product.*, " +
+		"currency.code as currency_code, " +
+		"connection.code as connection_code, connection.name as connection_name, connection.system_code as system_code, " +
+		"exchange.code as exchange_code").
+		Joins("LEFT JOIN connection ON broker_product.connection_id = connection.id").
+		Joins("LEFT JOIN exchange   ON broker_product.exchange_id   = exchange.id").
+		Joins("LEFT JOIN currency   ON exchange.currency_id         = currency.id").
+		Where(filter).Offset(offset).Limit(limit).Find(&list)
 
 	if res.Error != nil {
 		return nil, req.NewServerErrorByError(res.Error)

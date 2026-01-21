@@ -46,12 +46,13 @@ func GetDataProducts(tx *gorm.DB, filter map[string]any, offset int, limit int) 
 
 func GetDataProductsFull(tx *gorm.DB, filter map[string]any, offset int, limit int) (*[]DataProductFull, error) {
 	var list []DataProductFull
-	query := "SELECT dp.*, c.code as connection_code, c.name as connection_name, c.system_code as system_code, e.code as exchange_code " +
-		"FROM data_product dp " +
-		"LEFT JOIN connection c on dp.connection_id = c.id " +
-		"LEFT JOIN exchange   e on dp.exchange_id   = e.id"
 
-	res := tx.Raw(query).Where(filter).Offset(offset).Limit(limit).Find(&list)
+	res := tx.Model(&DataProduct{}).Select("data_product.*, " +
+		"connection.code as connection_code, connection.name as connection_name, connection.system_code as system_code, " +
+		"exchange.code as exchange_code").
+		Joins("LEFT JOIN connection ON data_product.connection_id = connection.id").
+		Joins("LEFT JOIN exchange   ON data_product.exchange_id   = exchange.id").
+		Where(filter).Offset(offset).Limit(limit).Find(&list)
 
 	if res.Error != nil {
 		return nil, req.NewServerErrorByError(res.Error)

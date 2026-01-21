@@ -38,14 +38,15 @@ func getDataProducts(c *auth.Context) {
 	offset, limit, err := c.GetPagingParams()
 
 	if err == nil {
-		details, err := c.GetParamAsBool("details", false)
+		var details bool
+		details, err = c.GetParamAsBool("details", false)
 
 		if err == nil {
 			err = db.RunInTransaction(func(tx *gorm.DB) error {
-				list, err := business.GetDataProducts(tx, c, filter, offset, limit, details)
+				list, terr := business.GetDataProducts(tx, c, filter, offset, limit, details)
 
-				if err != nil {
-					return err
+				if terr != nil {
+					return terr
 				}
 
 				return c.ReturnList(list, offset, limit, len(*list))
