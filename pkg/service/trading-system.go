@@ -132,13 +132,32 @@ func finalizeTradingSystem(c *auth.Context) {
 
 	if err == nil {
 		err = db.RunInTransaction(func(tx *gorm.DB) error {
-			ts, err := business.FinalizeTradingSystem(tx, c, id)
+			ts, terr := business.FinalizeTradingSystem(tx, c, id)
 
-			if err != nil {
-				return err
+			if terr != nil {
+				return terr
 			}
 
 			return c.ReturnObject(ts)
+		})
+	}
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func reloadTradesFromAgent(c *auth.Context) {
+	id, err := c.GetIdFromUrl()
+
+	if err == nil {
+		err = db.RunInTransaction(func(tx *gorm.DB) error {
+			res, terr := business.ReloadTradesFromAgent(tx, c, id)
+
+			if terr != nil {
+				return terr
+			}
+
+			return c.ReturnObject(res)
 		})
 	}
 	c.ReturnError(err)

@@ -92,6 +92,24 @@ type TradingSession struct {
 
 //=============================================================================
 //===
+//=== TradingSystemReloadResponse
+//===
+//=============================================================================
+
+type TradingSystemReloadResponse struct {
+	TradeCount map[string]int `json:"tradeCount"`
+}
+
+//=============================================================================
+
+func NewTradingSystemReloadResponse() *TradingSystemReloadResponse {
+	return &TradingSystemReloadResponse{
+		TradeCount: make(map[string]int),
+	}
+}
+
+//=============================================================================
+//===
 //=== ProductBroker & ProductData composite structs
 //===
 //=============================================================================

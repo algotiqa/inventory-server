@@ -25,12 +25,13 @@ THE SOFTWARE.
 package service
 
 import (
+	"log/slog"
+
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/auth/roles"
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/inventory-server/pkg/app"
 	"github.com/gin-gonic/gin"
-	"log/slog"
 )
 
 //=============================================================================
@@ -59,6 +60,7 @@ func Init(router *gin.Engine, cfg *app.Config, logger *slog.Logger) {
 	router.PUT("/api/inventory/v1/trading-systems/:id", ctrl.Secure(updateTradingSystem, roles.Admin_User_Service))
 	router.DELETE("/api/inventory/v1/trading-systems/:id", ctrl.Secure(deleteTradingSystem, roles.Admin_User_Service))
 	router.POST("/api/inventory/v1/trading-systems/:id/finalize", ctrl.Secure(finalizeTradingSystem, roles.Admin_User_Service))
+	router.POST("/api/inventory/v1/trading-systems/:id/reload-trades", ctrl.Secure(reloadTradesFromAgent, roles.Admin_User_Service))
 
 	router.GET("/api/inventory/v1/trading-sessions", ctrl.Secure(getTradingSessions, roles.Admin_User_Service))
 	router.GET("/api/inventory/v1/agent-profiles", ctrl.Secure(getAgentProfiles, roles.Admin_User_Service))

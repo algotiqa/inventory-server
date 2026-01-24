@@ -30,49 +30,59 @@ import (
 
 //=============================================================================
 
-type TradingSystem struct {
-	Name       string
-	DataSymbol string
+const (
+	UrlGetTradingSystems   = "/api/v1/trading-systems"
+	UrlReloadTradingSystem = "/api/v1/trading-systems/reload"
+	UrlSystemPing          = "/api/v1/system/ping"
+)
 
-	TradeLists []*TradeList
+//=============================================================================
+
+type TradingSystem struct {
+	Name       string `json:"name"`
+	DataSymbol string `json:"dataSymbol"`
+
+	TradeLists []*TradeList `json:"tradeLists"`
 }
 
 //=============================================================================
 
 type TradeList struct {
-	Trades       []*Trade
-	DailyProfits []*DailyProfit
+	FileName     string         `json:"fileName"`
+	Trades       []*Trade       `json:"trades"`
+	DailyProfits []*DailyProfit `json:"dailyProfits"`
 }
 
 //=============================================================================
 
 type Trade struct {
-	EntryDate   int
-	EntryTime   int
-	EntryPrice  float64
-	EntryLabel  string
-	ExitDate    int
-	ExitTime    int
-	ExitPrice   float64
-	ExitLabel   string
-	GrossProfit float64
-	Contracts   int
-	Position    int
+	EntryDate   int     `json:"entryDate"`
+	EntryTime   int     `json:"entryTime"`
+	EntryPrice  float64 `json:"entryPrice"`
+	EntryLabel  string  `json:"entryLabel"`
+	ExitDate    int     `json:"exitDate"`
+	ExitTime    int     `json:"exitTime"`
+	ExitPrice   float64 `json:"exitPrice"`
+	ExitLabel   string  `json:"exitLabel"`
+	GrossProfit float64 `json:"grossProfit"`
+	Contracts   int     `json:"contracts"`
+	Position    int     `json:"position"`
 }
 
 //=============================================================================
 
 type DailyProfit struct {
-	Date        int
-	Time        int
-	GrossProfit float64
-	Trades      int
+	Date        int     `json:"date"`
+	Time        int     `json:"time"`
+	GrossProfit float64 `json:"grossProfit"`
+	Trades      int     `json:"trades"`
 }
 
 //=============================================================================
 
 type TradeListMessage struct {
 	TradingSystemId uint               `json:"tradingSystemId"`
+	Reload          bool               `json:"reload"`
 	Trades          []*TradeItem       `json:"trades"`
 	DailyProfits    []*DailyProfitItem `json:"dailyProfits"`
 }
@@ -87,23 +97,23 @@ const (
 //=============================================================================
 
 type TradeItem struct {
-	TradeType       string       `json:"tradeType"`
-	EntryDate       *time.Time   `json:"entryDate"`
-	EntryPrice      float64      `json:"entryPrice"`
-	EntryLabel      string       `json:"entryLabel"`
-	ExitDate        *time.Time   `json:"exitDate"`
-	ExitPrice       float64      `json:"exitPrice"`
-	ExitLabel       string       `json:"exitLabel"`
-	GrossProfit     float64      `json:"grossProfit"`
-	Contracts       int          `json:"contracts"`
+	TradeType   string     `json:"tradeType"`
+	EntryDate   *time.Time `json:"entryDate"`
+	EntryPrice  float64    `json:"entryPrice"`
+	EntryLabel  string     `json:"entryLabel"`
+	ExitDate    *time.Time `json:"exitDate"`
+	ExitPrice   float64    `json:"exitPrice"`
+	ExitLabel   string     `json:"exitLabel"`
+	GrossProfit float64    `json:"grossProfit"`
+	Contracts   int        `json:"contracts"`
 }
 
 //=============================================================================
 
 type DailyProfitItem struct {
-	Day         int      `json:"day"`
-	GrossProfit float64  `json:"grossProfit"`
-	Trades      int      `json:"trades"`
+	Day         int     `json:"day"`
+	GrossProfit float64 `json:"grossProfit"`
+	Trades      int     `json:"trades"`
 }
 
 //=============================================================================

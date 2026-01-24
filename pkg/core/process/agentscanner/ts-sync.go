@@ -32,7 +32,9 @@ import (
 	"log/slog"
 	"net/http"
 	"os"
+	"slices"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/algotiqa/core/datatype"
@@ -41,6 +43,12 @@ import (
 	"github.com/algotiqa/inventory-server/pkg/app"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
+)
+
+//=============================================================================
+
+const (
+	DevString = ".dev."
 )
 
 //=============================================================================
@@ -119,14 +127,14 @@ func runAgent(ap *db.AgentProfile) {
 //=============================================================================
 
 func collectFromAgent(ap *db.AgentProfile) {
-	client := createClient(ap.SslCertRef, ap.SslKeyRef, "ca.crt")
+	client := CreateClient(ap.SslCertRef, ap.SslKeyRef, "ca.crt")
 	if client == nil {
 		return
 	}
 
 	var data []TradingSystem
 
-	err := req.DoGet(client, ap.RemoteUrl, &data, "")
+	err := req.DoGet(client, ap.RemoteUrl+UrlGetTradingSystems, &data, "")
 
 	if err == nil {
 		slog.Info("Trades successfully retrieved from agent", "username", ap.Username, "systems", strconv.Itoa(len(data)), "agent", ap.Name)
@@ -141,7 +149,7 @@ func collectFromAgent(ap *db.AgentProfile) {
 
 //=============================================================================
 
-func createClient(agentCert string, agentKey string, caCert string) *http.Client {
+func CreateClient(agentCert string, agentKey string, caCert string) *http.Client {
 	path := "certificate/"
 
 	cert, err := os.ReadFile(path + caCert)
@@ -186,17 +194,15 @@ func enqueueAgentTrades(tx *gorm.DB, ap *db.AgentProfile, agentTss []TradingSyst
 			continue
 		}
 
-		location, err := getLocation(tx, ts)
+		location, err := GetLocation(tx, ts)
 		if err != nil {
 			slog.Warn("Cannot retrieve timezone for trading system. Skipping", "externalRef", ats.Name, "username", ap.Username, "error", err)
 			continue
 		}
 
-		for _, tl := range ats.TradeLists {
-			err = sendTradeList(ts, ats.Name, tl, location)
-			if err != nil {
-				return err
-			}
+		err = SendTrades(ts, &ats, location, false)
+		if err != nil {
+			return err
 		}
 	}
 
@@ -205,16 +211,16 @@ func enqueueAgentTrades(tx *gorm.DB, ap *db.AgentProfile, agentTss []TradingSyst
 
 //=============================================================================
 
-func getLocation(tx *gorm.DB, ts *db.TradingSystem) (*time.Location, error) {
+func GetLocation(tx *gorm.DB, ts *db.TradingSystem) (*time.Location, error) {
 	bp, err := db.GetBrokerProductById(tx, ts.BrokerProductId)
 	if err != nil {
-		slog.Error("getTimezone: Could not retrieve broker product of TS", "error", err.Error(), "id", ts.Id)
+		slog.Error("getLocation: Could not retrieve broker product of TS", "error", err.Error(), "id", ts.Id)
 		return nil, err
 	}
 
 	ex, err := db.GetExchangeById(tx, bp.ExchangeId)
 	if err != nil {
-		slog.Error("getTimezone: Could not retrieve exchange of TS", "error", err.Error(), "id", ts.Id)
+		slog.Error("getLocation: Could not retrieve exchange of TS", "error", err.Error(), "id", ts.Id)
 		return nil, err
 	}
 
@@ -227,48 +233,69 @@ func getLocation(tx *gorm.DB, ts *db.TradingSystem) (*time.Location, error) {
 
 //=============================================================================
 
-func sendTradeList(ts *db.TradingSystem, extRef string, tl *TradeList, location *time.Location) error {
+func SendTrades(ts *db.TradingSystem, ats *TradingSystem, location *time.Location, reload bool) error {
+	//--- We want backtested data first and then last period data
+
+	sortTrades(ats)
+
 	//--- Collect trades
 
 	var tradeList []*TradeItem
 
-	for _, atr := range tl.Trades {
-		tr := createTrade(extRef, atr, location)
-		if tr == nil {
-			return errors.New("aborted")
+	for _, tl := range ats.TradeLists {
+		for _, atr := range tl.Trades {
+			tr := createTrade(ats.Name, atr, location)
+			if tr == nil {
+				return errors.New("aborted")
+			}
+			tradeList = append(tradeList, tr)
 		}
-		tradeList = append(tradeList, tr)
 	}
 
 	//--- Collect daily profits
 
 	var dayList []*DailyProfitItem
 
-	for _, adp := range tl.DailyProfits {
-		dp := createDailyProfit(adp, location)
-		if dp == nil {
-			return errors.New("aborted")
+	for _, tl := range ats.TradeLists {
+		for _, adp := range tl.DailyProfits {
+			dp := createDailyProfit(adp, location)
+			if dp == nil {
+				return errors.New("aborted")
+			}
+			dayList = append(dayList, dp)
 		}
-		dayList = append(dayList, dp)
 	}
 
 	//--- Send message
 
 	message := TradeListMessage{
 		TradingSystemId: ts.Id,
+		Reload:          reload,
 		Trades:          tradeList,
 		DailyProfits:    dayList,
 	}
 
 	err := msg.SendMessage(msg.ExRuntime, msg.SourceTrade, msg.TypeCreate, message)
 	if err != nil {
-		slog.Error("sendTradeList: Cannot enqueue trades for trading system", "name", ts.Name, "error", err.Error())
+		slog.Error("SendTrades: Cannot enqueue trades for trading system", "name", ts.Name, "error", err.Error())
 		return err
 	} else {
-		slog.Info("sendTradeList: Enqueued trades for trading system", "name", ts.Name, "username", ts.Username)
+		slog.Info("SendTrades: Enqueued trades for trading system", "name", ts.Name, "username", ts.Username)
 	}
 
 	return nil
+}
+
+//=============================================================================
+
+func sortTrades(ats *TradingSystem) {
+	slices.SortFunc(ats.TradeLists, func(i, j *TradeList) int {
+		if strings.Contains(i.FileName, DevString) {
+			return -1
+		}
+
+		return 0
+	})
 }
 
 //=============================================================================

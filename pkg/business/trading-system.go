@@ -28,6 +28,7 @@ import (
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/inventory-server/pkg/core/process/agentscanner"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
@@ -65,6 +66,12 @@ func AddTradingSystem(tx *gorm.DB, c *auth.Context, tss *TradingSystemSpec) (*db
 	ts.Overnight = tss.Overnight
 	ts.Tags = tss.Tags
 	ts.ExternalRef = tss.ExternalRef
+
+	//--- External systems are already finalized
+
+	if ts.AgentProfileId != nil {
+		ts.Finalized = true
+	}
 
 	err := db.AddTradingSystem(tx, &ts)
 	if err != nil {
@@ -196,6 +203,57 @@ func FinalizeTradingSystem(tx *gorm.DB, c *auth.Context, id uint) (*Finalization
 }
 
 //=============================================================================
+
+type TradingSystemReloadRequest struct {
+	Name string `json:"name"`
+}
+
+//-----------------------------------------------------------------------------
+
+func ReloadTradesFromAgent(tx *gorm.DB, c *auth.Context, id uint) (*TradingSystemReloadResponse, error) {
+	c.Log.Info("ReloadTradesFromAgent: Reloading trades for trading system", "id", id)
+
+	ts, err := getTradingSystem(tx, c, id, "ReloadTradingSystem")
+	if err != nil {
+		return nil, err
+	}
+
+	if ts.AgentProfileId == nil {
+		return nil, req.NewBadRequestError("Trading system has no agent associated")
+	}
+
+	var ap *db.AgentProfile
+	ap, err = getAgentProfile(tx, c, *ts.AgentProfileId)
+	if err != nil {
+		return nil, err
+	}
+
+	ats, err := callAgentToReloadSystem(c, ap, ts)
+	if err != nil {
+		return nil, err
+	}
+
+	location, err := agentscanner.GetLocation(tx, ts)
+	if err != nil {
+		c.Log.Error("ReloadTradesFromAgent: Cannot retrieve timezone for trading system.", "id", ts.Id, "error", err)
+		return nil, req.NewServerErrorByError(err)
+	}
+
+	err = agentscanner.SendTrades(ts, ats, location, true)
+	if err != nil {
+		return nil, req.NewServerErrorByError(err)
+	}
+
+	res := NewTradingSystemReloadResponse()
+	for _, tl := range ats.TradeLists {
+		res.TradeCount[tl.FileName] = len(tl.Trades)
+	}
+
+	c.Log.Info("ReloadTradesFromAgent: Trading system has been reloaded", "id", id, "fileCount", len(ats.TradeLists))
+	return res, nil
+}
+
+//=============================================================================
 //===
 //=== Private functions
 //===
@@ -273,6 +331,49 @@ func sendChangeMessage(tx *gorm.DB, c *auth.Context, ts *db.TradingSystem, msgTy
 	}
 
 	return nil
+}
+
+//=============================================================================
+
+func getAgentProfile(tx *gorm.DB, c *auth.Context, id uint) (*db.AgentProfile, error) {
+	ap, err := db.GetAgentProfileById(tx, id)
+	if err != nil {
+		c.Log.Error("getAgentProfile: Could not retrieve agent profile", "error", err.Error())
+		return nil, req.NewServerErrorByError(err)
+	}
+
+	if ap == nil {
+		c.Log.Error("getAgentProfile: Agent profile was not found", "id", id)
+		return nil, req.NewNotFoundError("Agent profile was not found: %v", id)
+	}
+
+	if ap.Username != c.Session.Username {
+		c.Log.Error("getAgentProfile: Agent profile not owned by user", "id", id)
+		return nil, req.NewForbiddenError("Agent profile is not owned by user: %v", id)
+	}
+
+	return ap, nil
+}
+
+//=============================================================================
+
+func callAgentToReloadSystem(c *auth.Context, ap *db.AgentProfile, ts *db.TradingSystem) (*agentscanner.TradingSystem, error) {
+	client := agentscanner.CreateClient(ap.SslCertRef, ap.SslKeyRef, "ca.crt")
+	if client == nil {
+		return nil, req.NewServerError("Cannot create client for agent: %v", ap.Id)
+	}
+
+	var ats agentscanner.TradingSystem
+	params := &TradingSystemReloadRequest{
+		Name: ts.ExternalRef,
+	}
+	err := req.DoPost(client, ap.RemoteUrl+agentscanner.UrlReloadTradingSystem, params, &ats, "")
+	if err != nil {
+		c.Log.Error("ReloadTradingSystem: Agent raised an error", "id", ap.Id, "error", err.Error())
+		return nil, req.NewServiceUnavailableError("Agent raised an error : " + err.Error())
+	}
+
+	return &ats, nil
 }
 
 //=============================================================================
