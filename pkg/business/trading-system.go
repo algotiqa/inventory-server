@@ -66,6 +66,9 @@ func AddTradingSystem(tx *gorm.DB, c *auth.Context, tss *TradingSystemSpec) (*db
 	ts.Overnight = tss.Overnight
 	ts.Tags = tss.Tags
 	ts.ExternalRef = tss.ExternalRef
+	ts.InSampleFrom = tss.InSampleFrom
+	ts.InSampleTo = tss.InSampleTo
+	ts.EngineCode = tss.EngineCode
 
 	//--- External systems are already finalized
 
@@ -110,6 +113,9 @@ func UpdateTradingSystem(tx *gorm.DB, c *auth.Context, id uint, tss *TradingSyst
 	ts.Overnight = tss.Overnight
 	ts.Tags = tss.Tags
 	ts.ExternalRef = tss.ExternalRef
+	ts.InSampleFrom = tss.InSampleFrom
+	ts.InSampleTo = tss.InSampleTo
+	ts.EngineCode = tss.EngineCode
 
 	err = db.UpdateTradingSystem(tx, ts)
 	if err != nil {
