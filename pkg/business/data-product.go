@@ -83,21 +83,24 @@ func GetDataProductById(tx *gorm.DB, c *auth.Context, id uint) (*DataProductExt,
 
 //=============================================================================
 
-func AddDataProduct(tx *gorm.DB, c *auth.Context, pds *DataProductSpec) (*db.DataProduct, error) {
-	c.Log.Info("AddDataProduct: Adding a new data product", "symbol", pds.Symbol, "name", pds.Name)
+func AddDataProduct(tx *gorm.DB, c *auth.Context, dps *DataProductSpec) (*db.DataProduct, error) {
+	c.Log.Info("AddDataProduct: Adding a new data product", "symbol", dps.Symbol, "name", dps.Name)
+
+	if err := dps.validateForAdd(); err != nil {
+		return nil, err
+	}
 
 	var pd db.DataProduct
-	pd.ConnectionId = pds.ConnectionId
-	pd.ExchangeId = pds.ExchangeId
+	pd.ConnectionId = dps.ConnectionId
+	pd.ExchangeId = dps.ExchangeId
 	pd.Username = c.Session.Username
-	pd.Symbol = pds.Symbol
-	pd.Name = pds.Name
-	pd.MarketType = pds.MarketType
-	pd.ProductType = pds.ProductType
-	pd.Months = pds.Months
-	pd.RolloverTrigger = pds.RolloverTrigger
-
-	//TODO: validate rollover trigger
+	pd.Symbol = dps.Symbol
+	pd.Name = dps.Name
+	pd.MarketType = dps.MarketType
+	pd.ProductType = dps.ProductType
+	pd.Months = dps.Months
+	pd.RolloverTrigger = dps.RolloverTrigger
+	pd.SessionStart = dps.SessionStart
 
 	err := db.AddDataProduct(tx, &pd)
 
@@ -117,8 +120,12 @@ func AddDataProduct(tx *gorm.DB, c *auth.Context, pds *DataProductSpec) (*db.Dat
 
 //=============================================================================
 
-func UpdateDataProduct(tx *gorm.DB, c *auth.Context, id uint, pds *DataProductSpec) (*db.DataProduct, error) {
-	c.Log.Info("UpdateDataProduct: Updating a data product", "id", id, "name", pds.Name)
+func UpdateDataProduct(tx *gorm.DB, c *auth.Context, id uint, dps *DataProductSpec) (*db.DataProduct, error) {
+	c.Log.Info("UpdateDataProduct: Updating a data product", "id", id, "name", dps.Name)
+
+	if err := dps.validateForUpdate(); err != nil {
+		return nil, err
+	}
 
 	pd, err := getDataProductAndCheckAccess(tx, c, id, "UpdateDataProduct")
 	if err != nil {
@@ -127,9 +134,9 @@ func UpdateDataProduct(tx *gorm.DB, c *auth.Context, id uint, pds *DataProductSp
 
 	//--- We can't change the exchange and the symbol
 
-	pd.Name = pds.Name
-	pd.MarketType = pds.MarketType
-	pd.ProductType = pds.ProductType
+	pd.Name = dps.Name
+	pd.MarketType = dps.MarketType
+	pd.ProductType = dps.ProductType
 
 	//TODO: Should we allow to modify these? Some recomputation is required
 	//pd.Months          = pds.Months

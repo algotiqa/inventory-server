@@ -102,15 +102,16 @@ const (
 
 type DataProduct struct {
 	Common
-	ConnectionId    uint          `json:"connectionId"`
-	ExchangeId      uint          `json:"exchangeId"`
-	Username        string        `json:"username"`
-	Symbol          string        `json:"symbol"`
-	Name            string        `json:"name"`
-	MarketType      string        `json:"marketType"`
-	ProductType     string        `json:"productType"`
-	Months          string        `json:"months"`
-	RolloverTrigger DPRollTrigger `json:"rolloverTrigger"`
+	ConnectionId    uint             `json:"connectionId"`
+	ExchangeId      uint             `json:"exchangeId"`
+	Username        string           `json:"username"`
+	Symbol          string           `json:"symbol"`
+	Name            string           `json:"name"`
+	MarketType      string           `json:"marketType"`
+	ProductType     string           `json:"productType"`
+	Months          string           `json:"months"`
+	RolloverTrigger DPRollTrigger    `json:"rolloverTrigger"`
+	SessionStart    datatype.IntTime `json:"sessionStart"`
 }
 
 //=============================================================================
