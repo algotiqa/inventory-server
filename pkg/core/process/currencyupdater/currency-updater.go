@@ -29,9 +29,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/algotiqa/core/datatype"
 	"github.com/algotiqa/inventory-server/pkg/app"
 	"github.com/algotiqa/inventory-server/pkg/db"
+	"github.com/algotiqa/types"
 	"gorm.io/gorm"
 )
 
@@ -75,7 +75,7 @@ func run() {
 		var history []*db.CurrencyHistory
 
 		if cur.LastDate.IsNil() {
-			history, err = latestUpdate(currencies, datatype.Today(time.UTC).AddDays(-1))
+			history, err = latestUpdate(currencies, types.Today(time.UTC).AddDays(-1))
 		} else if newLatestDay(cur) {
 			history, err = latestUpdate(currencies, cur.LastDate.AddDays(1))
 		} else if !cur.HistoryEnded {
@@ -116,14 +116,14 @@ func getCurrencies() ([]*db.Currency, error) {
 //=============================================================================
 
 func newLatestDay(cur *db.Currency) bool {
-	today := datatype.Today(time.UTC)
+	today := types.Today(time.UTC)
 
 	return cur.LastDate.AddDays(1) < today
 }
 
 //=============================================================================
 
-func latestUpdate(currencies []*db.Currency, date datatype.IntDate) ([]*db.CurrencyHistory, error) {
+func latestUpdate(currencies []*db.Currency, date types.Date) ([]*db.CurrencyHistory, error) {
 	fcc := NewFreeCurrencyClient(baseUrl, apiKey)
 	res, err := fcc.GetHistoricalValues(date, BaseCurrency, toList(currencies))
 	if err != nil {
@@ -158,7 +158,7 @@ func latestUpdate(currencies []*db.Currency, date datatype.IntDate) ([]*db.Curre
 
 //=============================================================================
 
-func dateUpdate(currencies []*db.Currency, date datatype.IntDate) ([]*db.CurrencyHistory, error) {
+func dateUpdate(currencies []*db.Currency, date types.Date) ([]*db.CurrencyHistory, error) {
 	fcc := NewFreeCurrencyClient(baseUrl, apiKey)
 	res, err := fcc.GetHistoricalValues(date, BaseCurrency, toList(currencies))
 	if err != nil {

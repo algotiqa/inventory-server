@@ -27,7 +27,7 @@ package db
 import (
 	"time"
 
-	"github.com/algotiqa/core/datatype"
+	"github.com/algotiqa/types"
 )
 
 //=============================================================================
@@ -41,23 +41,23 @@ type Common struct {
 //=============================================================================
 
 type Currency struct {
-	Id           uint             `json:"id"`
-	Code         string           `json:"code"`
-	Name         string           `json:"name"`
-	Symbol       string           `json:"symbol"`
-	FirstDate    datatype.IntDate `json:"firstDate"`
-	LastDate     datatype.IntDate `json:"lastDate"`
-	LastValue    float64          `json:"lastValue"`
-	HistoryEnded bool             `json:"historyEnded"`
+	Id           uint       `json:"id"`
+	Code         string     `json:"code"`
+	Name         string     `json:"name"`
+	Symbol       string     `json:"symbol"`
+	FirstDate    types.Date `json:"firstDate"`
+	LastDate     types.Date `json:"lastDate"`
+	LastValue    float64    `json:"lastValue"`
+	HistoryEnded bool       `json:"historyEnded"`
 }
 
 //=============================================================================
 
 type CurrencyHistory struct {
-	Id         uint             `json:"id"`
-	CurrencyId uint             `json:"currencyId"`
-	Date       datatype.IntDate `json:"date"`
-	Value      float64          `json:"value"`
+	Id         uint       `json:"id"`
+	CurrencyId uint       `json:"currencyId"`
+	Date       types.Date `json:"date"`
+	Value      float64    `json:"value"`
 }
 
 //=============================================================================
@@ -102,16 +102,16 @@ const (
 
 type DataProduct struct {
 	Common
-	ConnectionId    uint             `json:"connectionId"`
-	ExchangeId      uint             `json:"exchangeId"`
-	Username        string           `json:"username"`
-	Symbol          string           `json:"symbol"`
-	Name            string           `json:"name"`
-	MarketType      string           `json:"marketType"`
-	ProductType     string           `json:"productType"`
-	Months          string           `json:"months"`
-	RolloverTrigger DPRollTrigger    `json:"rolloverTrigger"`
-	SessionStart    datatype.IntTime `json:"sessionStart"`
+	ConnectionId    uint          `json:"connectionId"`
+	ExchangeId      uint          `json:"exchangeId"`
+	Username        string        `json:"username"`
+	Symbol          string        `json:"symbol"`
+	Name            string        `json:"name"`
+	MarketType      string        `json:"marketType"`
+	ProductType     string        `json:"productType"`
+	Months          string        `json:"months"`
+	RolloverTrigger DPRollTrigger `json:"rolloverTrigger"`
+	SessionStart    types.Time    `json:"sessionStart"`
 }
 
 //=============================================================================
@@ -175,21 +175,21 @@ type TradingSession struct {
 
 type TradingSystem struct {
 	Common
-	Username         string           `json:"username"`
-	DataProductId    uint             `json:"dataProductId"`
-	BrokerProductId  uint             `json:"brokerProductId"`
-	TradingSessionId uint             `json:"tradingSessionId"`
-	AgentProfileId   *uint            `json:"agentProfileId"`
-	Name             string           `json:"name"`
-	Timeframe        int              `json:"timeframe"`
-	StrategyType     string           `json:"strategyType"`
-	Overnight        bool             `json:"overnight"`
-	Tags             string           `json:"tags"`
-	ExternalRef      string           `json:"externalRef"`
-	Finalized        bool             `json:"finalized"`
-	InSampleFrom     datatype.IntDate `json:"inSampleFrom"`
-	InSampleTo       datatype.IntDate `json:"inSampleTo"`
-	EngineCode       string           `json:"engineCode"`
+	Username         string     `json:"username"`
+	DataProductId    uint       `json:"dataProductId"`
+	BrokerProductId  uint       `json:"brokerProductId"`
+	TradingSessionId uint       `json:"tradingSessionId"`
+	AgentProfileId   *uint      `json:"agentProfileId"`
+	Name             string     `json:"name"`
+	Timeframe        int        `json:"timeframe"`
+	StrategyType     string     `json:"strategyType"`
+	Overnight        bool       `json:"overnight"`
+	Tags             string     `json:"tags"`
+	ExternalRef      string     `json:"externalRef"`
+	Finalized        bool       `json:"finalized"`
+	InSampleFrom     types.Date `json:"inSampleFrom"`
+	InSampleTo       types.Date `json:"inSampleTo"`
+	EngineCode       string     `json:"engineCode"`
 }
 
 //=============================================================================

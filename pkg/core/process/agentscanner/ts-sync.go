@@ -37,11 +37,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/algotiqa/core/datatype"
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/inventory-server/pkg/app"
 	"github.com/algotiqa/inventory-server/pkg/db"
+	"github.com/algotiqa/types"
 	"gorm.io/gorm"
 )
 
@@ -353,7 +353,7 @@ func createDailyProfit(dp *DailyProfit, loc *time.Location) *DailyProfitItem {
 	}
 
 	return &DailyProfitItem{
-		Day:         int(datatype.ToIntDate(&date)),
+		Day:         int(types.ToDate(&date)),
 		GrossProfit: dp.GrossProfit,
 		Trades:      dp.Trades,
 	}

@@ -25,9 +25,8 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/algotiqa/core/datatype"
 	"github.com/algotiqa/inventory-server/pkg/db"
-	"github.com/algotiqa/tiq-engine/session"
+	"github.com/algotiqa/types"
 )
 
 //=============================================================================
@@ -42,19 +41,19 @@ type ConnectionSpec struct {
 //=============================================================================
 
 type TradingSystemSpec struct {
-	DataProductId    uint             `json:"dataProductId"     binding:"required"`
-	BrokerProductId  uint             `json:"brokerProductId"   binding:"required"`
-	TradingSessionId uint             `json:"tradingSessionId"  binding:"required"`
-	AgentProfileId   *uint            `json:"agentProfileId"`
-	Name             string           `json:"name"              binding:"required"`
-	Timeframe        int              `json:"timeframe"         binding:"min=1,max=1440"`
-	StrategyType     string           `json:"strategyType"      binding:"required"`
-	Overnight        bool             `json:"overnight"`
-	Tags             string           `json:"tags"`
-	ExternalRef      string           `json:"externalRef"`
-	InSampleFrom     datatype.IntDate `json:"inSampleFrom"      binding:"required"`
-	InSampleTo       datatype.IntDate `json:"inSampleTo"        binding:"required"`
-	EngineCode       string           `json:"engineCode"        binding:"required"`
+	DataProductId    uint       `json:"dataProductId"     binding:"required"`
+	BrokerProductId  uint       `json:"brokerProductId"   binding:"required"`
+	TradingSessionId uint       `json:"tradingSessionId"  binding:"required"`
+	AgentProfileId   *uint      `json:"agentProfileId"`
+	Name             string     `json:"name"              binding:"required"`
+	Timeframe        int        `json:"timeframe"         binding:"min=1,max=1440"`
+	StrategyType     string     `json:"strategyType"      binding:"required"`
+	Overnight        bool       `json:"overnight"`
+	Tags             string     `json:"tags"`
+	ExternalRef      string     `json:"externalRef"`
+	InSampleFrom     types.Date `json:"inSampleFrom"      binding:"required"`
+	InSampleTo       types.Date `json:"inSampleTo"        binding:"required"`
+	EngineCode       string     `json:"engineCode"        binding:"required"`
 }
 
 //=============================================================================
@@ -76,9 +75,9 @@ type BrokerProductSpec struct {
 
 type TradingSession struct {
 	db.Common
-	Username string                  `json:"username"`
-	Name     string                  `json:"name"`
-	Session  *session.TradingSession `json:"session"`
+	Username string                `json:"username"`
+	Name     string                `json:"name"`
+	Session  *types.TradingSession `json:"session"`
 }
 
 //=============================================================================

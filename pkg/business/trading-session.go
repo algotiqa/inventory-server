@@ -28,7 +28,7 @@ import (
 	"encoding/json"
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/inventory-server/pkg/db"
-	"github.com/algotiqa/tiq-engine/session"
+	"github.com/algotiqa/types"
 	"gorm.io/gorm"
 )
 
@@ -48,9 +48,9 @@ func GetTradingSessions(tx *gorm.DB, c *auth.Context, filter map[string]any, off
 	var res []TradingSession
 
 	for _, dbTs := range *list {
-		var sickTs session.TradingSession
+		var tiqTs types.TradingSession
 
-		err = json.Unmarshal([]byte(dbTs.Config), &sickTs)
+		err = json.Unmarshal([]byte(dbTs.Config), &tiqTs)
 		if err != nil {
 			c.Log.Error("GetTradingSessions: Invalid session config", "error", err.Error())
 			return nil, err
@@ -60,7 +60,7 @@ func GetTradingSessions(tx *gorm.DB, c *auth.Context, filter map[string]any, off
 			Common:   dbTs.Common,
 			Name:     dbTs.Name,
 			Username: dbTs.Username,
-			Session:  &sickTs,
+			Session:  &tiqTs,
 		}
 
 		res = append(res, busTs)

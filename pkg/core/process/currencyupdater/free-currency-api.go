@@ -31,7 +31,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/algotiqa/core/datatype"
+	"github.com/algotiqa/types"
 )
 
 //=============================================================================
@@ -66,7 +66,7 @@ func NewFreeCurrencyClient(baseUrl, apiKey string) *FreeCurrencyClient {
 //===
 //=============================================================================
 
-func (f *FreeCurrencyClient) GetHistoricalValues(date datatype.IntDate, baseCurrency, currencyList string) (*HistoricalResponse, error) {
+func (f *FreeCurrencyClient) GetHistoricalValues(date types.Date, baseCurrency, currencyList string) (*HistoricalResponse, error) {
 	params := map[string]string{}
 	params["date"] = date.String()
 	params["base_currency"] = baseCurrency
