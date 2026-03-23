@@ -25,8 +25,8 @@ THE SOFTWARE.
 package business
 
 import (
-	"encoding/json"
 	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"github.com/algotiqa/types"
 	"gorm.io/gorm"
@@ -34,39 +34,55 @@ import (
 
 //=============================================================================
 
-func GetTradingSessions(tx *gorm.DB, c *auth.Context, filter map[string]any, offset int, limit int) (*[]TradingSession, error) {
-	if !c.Session.IsAdmin() {
-		filter["username"] = c.Session.Username
+func GetTradingSessions(tx *gorm.DB, c *auth.Context, filter map[string]any, offset int, limit int) (*[]*TradingSession, error) {
+	filter["username"] = nil
+	sysList, errs := db.GetTradingSessions(tx, filter, offset, limit)
+	if errs != nil {
+		return nil, errs
 	}
 
-	list, err := db.GetTradingSessions(tx, filter, offset, limit)
-
-	if err != nil {
-		return nil, err
+	filter["username"] = c.Session.Username
+	usrList, erru := db.GetTradingSessions(tx, filter, offset, limit)
+	if erru != nil {
+		return nil, erru
 	}
 
-	var res []TradingSession
+	var res []*TradingSession
 
-	for _, dbTs := range *list {
-		var tiqTs types.TradingSession
-
-		err = json.Unmarshal([]byte(dbTs.Config), &tiqTs)
-		if err != nil {
-			c.Log.Error("GetTradingSessions: Invalid session config", "error", err.Error())
-			return nil, err
-		}
-
-		busTs := TradingSession{
-			Common:   dbTs.Common,
-			Name:     dbTs.Name,
-			Username: dbTs.Username,
-			Session:  &tiqTs,
-		}
-
-		res = append(res, busTs)
+	res,errs = rebuildSessions(c, res, sysList)
+	res,erru = rebuildSessions(c, res, usrList)
+	if errs != nil || erru != nil {
+		return nil, req.NewServerError("Unable to rebuild the sessions")
 	}
 
 	return &res, nil
+}
+
+//=============================================================================
+//===
+//=== Private functions
+//===
+//=============================================================================
+
+func rebuildSessions(c *auth.Context, result []*TradingSession, list *[]db.TradingSession) ([]*TradingSession, error) {
+	for _, dbTs := range *list {
+		sess,err := types.NewTradingSession(dbTs.Session)
+		if err != nil {
+			c.Log.Error("rebuildSessions: Invalid session config", "error", err.Error(), "config", dbTs.Session)
+			return nil,err
+		}
+
+		busTs := &TradingSession{
+			Common:   dbTs.Common,
+			Name:     dbTs.Name,
+			Username: dbTs.Username,
+			Session:  sess,
+		}
+
+		result = append(result, busTs)
+	}
+
+	return result,nil
 }
 
 //=============================================================================

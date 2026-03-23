@@ -25,9 +25,7 @@ THE SOFTWARE.
 package business
 
 import (
-	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/inventory-server/pkg/db"
-	"github.com/algotiqa/types"
 )
 
 //=============================================================================
@@ -41,17 +39,13 @@ type DataProductSpec struct {
 	ProductType     string           `json:"productType"    binding:"required"`
 	Months          string           `json:"months"`
 	RolloverTrigger db.DPRollTrigger `json:"rolloverTrigger"`
-	SessionStart    types.Time       `json:"sessionStart"   binding:"required"`
+	SessionId       uint             `json:"sessionId"      binding:"required"`
 }
 
 //=============================================================================
 
 func (s *DataProductSpec) validateForAdd() error {
 	//TODO: validate rollover trigger
-
-	if !s.SessionStart.IsValid() {
-		return req.NewBadRequestError("SessionStart is invalid: %d", s.SessionStart)
-	}
 
 	return nil
 }

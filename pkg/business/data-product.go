@@ -91,16 +91,16 @@ func AddDataProduct(tx *gorm.DB, c *auth.Context, dps *DataProductSpec) (*db.Dat
 	}
 
 	var pd db.DataProduct
-	pd.ConnectionId = dps.ConnectionId
-	pd.ExchangeId = dps.ExchangeId
-	pd.Username = c.Session.Username
-	pd.Symbol = dps.Symbol
-	pd.Name = dps.Name
-	pd.MarketType = dps.MarketType
-	pd.ProductType = dps.ProductType
-	pd.Months = dps.Months
+	pd.ConnectionId    = dps.ConnectionId
+	pd.ExchangeId      = dps.ExchangeId
+	pd.Username        = c.Session.Username
+	pd.Symbol          = dps.Symbol
+	pd.Name            = dps.Name
+	pd.MarketType      = dps.MarketType
+	pd.ProductType     = dps.ProductType
+	pd.Months          = dps.Months
 	pd.RolloverTrigger = dps.RolloverTrigger
-	pd.SessionStart = dps.SessionStart
+	pd.SessionId       = dps.SessionId
 
 	err := db.AddDataProduct(tx, &pd)
 
@@ -134,8 +134,8 @@ func UpdateDataProduct(tx *gorm.DB, c *auth.Context, id uint, dps *DataProductSp
 
 	//--- We can't change the exchange and the symbol
 
-	pd.Name = dps.Name
-	pd.MarketType = dps.MarketType
+	pd.Name        = dps.Name
+	pd.MarketType  = dps.MarketType
 	pd.ProductType = dps.ProductType
 
 	//TODO: Should we allow to modify these? Some recomputation is required
@@ -187,24 +187,35 @@ func getDataProductAndCheckAccess(tx *gorm.DB, c *auth.Context, id uint, functio
 
 //=============================================================================
 
-func sendDataProductChangeMessage(tx *gorm.DB, c *auth.Context, pd *db.DataProduct, msgType int) error {
-	conn, err := db.GetConnectionById(tx, pd.ConnectionId)
+func sendDataProductChangeMessage(tx *gorm.DB, c *auth.Context, dp *db.DataProduct, msgType int) error {
+	conn, err := db.GetConnectionById(tx, dp.ConnectionId)
 	if err != nil {
-		c.Log.Error("[Add|Update]DataProduct: Could not retrieve connection", "error", err.Error())
+		c.Log.Error("sendDataProductChangeMessage: Could not retrieve connection", "error", err.Error())
 		return err
 	}
 
-	exc, err := db.GetExchangeById(tx, pd.ExchangeId)
+	exc, err := db.GetExchangeById(tx, dp.ExchangeId)
 	if err != nil {
-		c.Log.Error("[Add|Update]DataProduct: Could not retrieve exchange", "error", err.Error())
+		c.Log.Error("sendDataProductChangeMessage: Could not retrieve exchange", "error", err.Error())
 		return err
 	}
 
-	pdm := DataProductMessage{*pd, *conn, *exc}
+	sess, err := db.GetTradingSessionById(tx, dp.SessionId)
+	if err != nil {
+		c.Log.Error("sendDataProductChangeMessage: Could not retrieve trading session", "error", err.Error())
+		return err
+	}
+
+	if conn == nil || exc == nil || sess == nil {
+		c.Log.Error("sendDataProductChangeMessage: Could not retrieve the connection/exchange/session for data product", "id", dp.Id)
+		return req.NewServerError("Could not retrieve some information while sending the data product message")
+	}
+
+	pdm := DataProductMessage{*dp, *conn, *exc, *sess}
 	err = msg.SendMessage(msg.ExInventory, msg.SourceDataProduct, msgType, &pdm)
 
 	if err != nil {
-		c.Log.Error("[Add|Update]DataProduct: Could not publish the update message", "error", err.Error())
+		c.Log.Error("sendDataProductChangeMessage: Could not publish the update message", "error", err.Error())
 		return err
 	}
 

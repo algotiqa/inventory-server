@@ -137,9 +137,10 @@ type TradingSystemMessage struct {
 //=============================================================================
 
 type DataProductMessage struct {
-	DataProduct db.DataProduct `json:"dataProduct"`
-	Connection  db.Connection  `json:"connection"`
-	Exchange    db.Exchange    `json:"exchange"`
+	DataProduct    db.DataProduct    `json:"dataProduct"`
+	Connection     db.Connection     `json:"connection"`
+	Exchange       db.Exchange       `json:"exchange"`
+	TradingSession db.TradingSession `json:"tradingSession"`
 }
 
 //=============================================================================

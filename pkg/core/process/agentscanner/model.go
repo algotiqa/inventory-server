@@ -33,6 +33,7 @@ import (
 const (
 	UrlGetTradingSystems   = "/api/v1/trading-systems"
 	UrlReloadTradingSystem = "/api/v1/trading-systems/reload"
+	UrlListTradingSystem   = "/api/v1/trading-systems/names"
 	UrlSystemPing          = "/api/v1/system/ping"
 )
 

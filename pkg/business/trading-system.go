@@ -55,20 +55,20 @@ func AddTradingSystem(tx *gorm.DB, c *auth.Context, tss *TradingSystemSpec) (*db
 	//TODO: validate type
 
 	var ts db.TradingSystem
-	ts.Username = c.Session.Username
-	ts.DataProductId = tss.DataProductId
-	ts.BrokerProductId = tss.BrokerProductId
+	ts.Username         = c.Session.Username
+	ts.DataProductId    = tss.DataProductId
+	ts.BrokerProductId  = tss.BrokerProductId
 	ts.TradingSessionId = tss.TradingSessionId
-	ts.AgentProfileId = tss.AgentProfileId
-	ts.Name = tss.Name
-	ts.Timeframe = tss.Timeframe
-	ts.StrategyType = tss.StrategyType
-	ts.Overnight = tss.Overnight
-	ts.Tags = tss.Tags
-	ts.ExternalRef = tss.ExternalRef
-	ts.InSampleFrom = tss.InSampleFrom
-	ts.InSampleTo = tss.InSampleTo
-	ts.EngineCode = tss.EngineCode
+	ts.AgentProfileId   = tss.AgentProfileId
+	ts.Name             = tss.Name
+	ts.Timeframe        = tss.Timeframe
+	ts.StrategyType     = tss.StrategyType
+	ts.Overnight        = tss.Overnight
+	ts.Tags             = tss.Tags
+	ts.ExternalRef      = tss.ExternalRef
+	ts.InSampleFrom     = tss.InSampleFrom
+	ts.InSampleTo       = tss.InSampleTo
+	ts.EngineCode       = tss.EngineCode
 
 	//--- External systems are already finalized
 
@@ -103,19 +103,19 @@ func UpdateTradingSystem(tx *gorm.DB, c *auth.Context, id uint, tss *TradingSyst
 
 	//TODO: validate type
 
-	ts.DataProductId = tss.DataProductId
-	ts.BrokerProductId = tss.BrokerProductId
+	ts.DataProductId    = tss.DataProductId
+	ts.BrokerProductId  = tss.BrokerProductId
 	ts.TradingSessionId = tss.TradingSessionId
-	ts.AgentProfileId = tss.AgentProfileId
-	ts.Name = tss.Name
-	ts.Timeframe = tss.Timeframe
-	ts.StrategyType = tss.StrategyType
-	ts.Overnight = tss.Overnight
-	ts.Tags = tss.Tags
-	ts.ExternalRef = tss.ExternalRef
-	ts.InSampleFrom = tss.InSampleFrom
-	ts.InSampleTo = tss.InSampleTo
-	ts.EngineCode = tss.EngineCode
+	ts.AgentProfileId   = tss.AgentProfileId
+	ts.Name             = tss.Name
+	ts.Timeframe        = tss.Timeframe
+	ts.StrategyType     = tss.StrategyType
+	ts.Overnight        = tss.Overnight
+	ts.Tags             = tss.Tags
+	ts.ExternalRef      = tss.ExternalRef
+	ts.InSampleFrom     = tss.InSampleFrom
+	ts.InSampleTo       = tss.InSampleTo
+	ts.EngineCode       = tss.EngineCode
 
 	err = db.UpdateTradingSystem(tx, ts)
 	if err != nil {

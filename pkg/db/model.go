@@ -111,7 +111,7 @@ type DataProduct struct {
 	ProductType     string        `json:"productType"`
 	Months          string        `json:"months"`
 	RolloverTrigger DPRollTrigger `json:"rolloverTrigger"`
-	SessionStart    types.Time    `json:"sessionStart"`
+	SessionId       uint          `json:"sessionId"`
 }
 
 //=============================================================================
@@ -168,7 +168,7 @@ type TradingSession struct {
 	Common
 	Username string `json:"username"`
 	Name     string `json:"name"`
-	Config   string `json:"config"`
+	Session  string `json:"session"`
 }
 
 //=============================================================================

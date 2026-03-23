@@ -53,3 +53,21 @@ func getAgentProfiles(c *auth.Context) {
 }
 
 //=============================================================================
+
+func getExternalRefs(c *auth.Context) {
+	id, err := c.GetIdFromUrl()
+
+	if err == nil {
+		err = db.RunInTransaction(func(tx *gorm.DB) error {
+			res, terr := business.GetExternalRefs(tx, c, id)
+			if terr != nil {
+				return terr
+			}
+
+			return c.ReturnObject(res)
+		})
+	}
+	c.ReturnError(err)
+}
+
+//=============================================================================
