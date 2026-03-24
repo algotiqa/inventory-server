@@ -25,6 +25,8 @@ THE SOFTWARE.
 package business
 
 import (
+	"slices"
+
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/inventory-server/pkg/core/process/agentscanner"
@@ -75,6 +77,8 @@ func GetExternalRefs(tx *gorm.DB, c *auth.Context, id uint) ([]string, error) {
 			res = append(res, xref)
 		}
 	}
+
+	slices.Sort(res)
 
 	c.Log.Info("GetExternalRefs: Got new list of external refs", "id", id, "size", len(res))
 	return res, nil
