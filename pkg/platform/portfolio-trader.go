@@ -58,7 +58,7 @@ func ExportTradingSystemsFromPortfolio(c *auth.Context, ids []uint) (*ExportedDa
 
 	var exportedData ExportedData
 
-	client := req.GetClient("bf")
+	client := req.GetDefaultClient()
 	url := c.Config.(*app.Config).Platform.Portfolio + "/v1/trading-systems/export?"+ addParameters(ids)
 	err := req.DoGet(client, url, &exportedData, c.Token)
 

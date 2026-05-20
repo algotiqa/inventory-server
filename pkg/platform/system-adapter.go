@@ -25,10 +25,11 @@ THE SOFTWARE.
 package platform
 
 import (
+	"sync"
+
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/inventory-server/pkg/app"
-	"sync"
 )
 
 //=============================================================================
@@ -106,7 +107,7 @@ func loadSystems(c *auth.Context) error {
 
 	var systemList SystemList
 
-	client := req.GetClient("bf")
+	client := req.GetDefaultClient()
 	url := c.Config.(*app.Config).Platform.System + "/v1/adapters"
 	err := req.DoGet(client, url, &systemList, c.Token)
 

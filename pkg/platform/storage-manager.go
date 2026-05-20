@@ -55,7 +55,7 @@ func ExportTradingSystemsFromStorage(c *auth.Context, ids []uint) ([]byte, error
 //=============================================================================
 
 func getData(c *auth.Context, ids []uint) ([]byte, error) {
-	client := req.GetClient("bf")
+	client := req.GetDefaultClient()
 	url    := c.Config.(*app.Config).Platform.Storage + "/v1/trading-systems/export?"+ addParameters(ids)
 
 	rq, err := http.NewRequest("GET", url, nil)
