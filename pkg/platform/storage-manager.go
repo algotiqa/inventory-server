@@ -1,6 +1,6 @@
 //=============================================================================
 /*
-Copyright © 2023 Andrea Carboni andrea.carboni71@gmail.com
+Copyright © 2026 Andrea Carboni andrea.carboni71@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,47 +22,56 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package db
+package platform
 
 import (
+	"io"
+	"net/http"
+
+	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/req"
-	"gorm.io/gorm"
+	"github.com/algotiqa/inventory-server/pkg/app"
 )
 
 //=============================================================================
+//===
+//=== Public methods
+//===
+//=============================================================================
 
-func GetTradingSessions(tx *gorm.DB, username string) (*[]TradingSession, error) {
-	var list []TradingSession
-	res := tx.Find(&list, "username = ? or username is null order by id", username)
+func ExportTradingSystemsFromStorage(c *auth.Context, ids []uint) ([]byte, error) {
+	c.Log.Info("ExportTradingSystemsFromStorage: Retrieving systems from portfolio trader...")
 
-	if res.Error != nil {
-		return nil, req.NewServerErrorByError(res.Error)
+	data,err := getData(c, ids)
+	if err != nil {
+		c.Log.Error("ExportTradingSystemsFromStorage: Got an error from storage manager", "error", err.Error())
+		return nil, req.NewServerError("Cannot communicate with storage-manager: %v", err.Error())
 	}
 
-	return &list, nil
+	c.Log.Info("ExportTradingSystemsFromStorage: Systems loaded", "zipSize", len(data))
+	return data,nil
 }
 
 //=============================================================================
 
-func GetTradingSessionById(tx *gorm.DB, id uint) (*TradingSession, error) {
-	var list []TradingSession
-	res := tx.Find(&list, id)
+func getData(c *auth.Context, ids []uint) ([]byte, error) {
+	client := req.GetClient("bf")
+	url    := c.Config.(*app.Config).Platform.Storage + "/v1/trading-systems/export?"+ addParameters(ids)
 
-	if res.Error != nil {
-		return nil, req.NewServerErrorByError(res.Error)
+	rq, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return nil,err
 	}
 
-	if len(list) == 1 {
-		return &list[0], nil
+	rq.Header.Set("Authorization", "Bearer "+ c.Token)
+
+	res, err := client.Do(rq)
+	if err != nil {
+		return nil, err
 	}
 
-	return nil, nil
-}
-
-//=============================================================================
-
-func AddTradingSession(tx *gorm.DB, s *TradingSession) error {
-	return tx.Create(s).Error
+	defer res.Body.Close()
+	return io.ReadAll(res.Body)
 }
 
 //=============================================================================

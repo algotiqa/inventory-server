@@ -26,8 +26,8 @@ package service
 
 import (
 	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/inventory-server/pkg/business"
-	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -38,7 +38,7 @@ func getConnections(c *auth.Context) {
 	offset, limit, err := c.GetPagingParams()
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			list, err := business.GetConnections(tx, c, filter, offset, limit)
 
 			if err != nil {
@@ -58,7 +58,7 @@ func getConnectionById(c *auth.Context) {
 	id, err := c.GetIdFromUrl()
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			conn, err := business.GetConnectionById(tx, c, id)
 
 			if err != nil {
@@ -79,7 +79,7 @@ func addConnection(c *auth.Context) {
 	err := c.BindParamsFromBody(&cs)
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			conn, err := business.AddConnection(tx, c, &cs)
 
 			if err != nil {
@@ -104,7 +104,7 @@ func updateConnection(c *auth.Context) {
 		id, err = c.GetIdFromUrl()
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				ts, err := business.UpdateConnection(tx, c, id, &cs)
 
 				if err != nil {
@@ -125,7 +125,7 @@ func deleteConnection(c *auth.Context) {
 	id, err := c.GetIdFromUrl()
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			ts, err := business.DeleteConnection(tx, c, id)
 
 			if err != nil {

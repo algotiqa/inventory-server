@@ -60,3 +60,9 @@ func GetAgentProfileById(tx *gorm.DB, id uint) (*AgentProfile, error) {
 }
 
 //=============================================================================
+
+func AddAgentProfile(tx *gorm.DB, ap *AgentProfile) error {
+	return tx.Create(ap).Error
+}
+
+//=============================================================================

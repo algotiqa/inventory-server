@@ -1,6 +1,6 @@
 //=============================================================================
 /*
-Copyright © 2023 Andrea Carboni andrea.carboni71@gmail.com
+Copyright © 2026 Andrea Carboni andrea.carboni71@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,47 +22,60 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package db
+package importexport
 
 import (
-	"github.com/algotiqa/core/req"
-	"gorm.io/gorm"
+	"github.com/algotiqa/inventory-server/pkg/db"
 )
 
 //=============================================================================
+//===
+//=== Plan
+//===
+//=============================================================================
 
-func GetTradingSessions(tx *gorm.DB, username string) (*[]TradingSession, error) {
-	var list []TradingSession
-	res := tx.Find(&list, "username = ? or username is null order by id", username)
-
-	if res.Error != nil {
-		return nil, req.NewServerErrorByError(res.Error)
-	}
-
-	return &list, nil
+type ImportPlan struct {
+	TradingSystems  []*SelectedTradingSystem `json:"tradingSystems"`
+	ReferencedItems []*SelectedReference     `json:"referencedItems"`
 }
 
 //=============================================================================
 
-func GetTradingSessionById(tx *gorm.DB, id uint) (*TradingSession, error) {
-	var list []TradingSession
-	res := tx.Find(&list, id)
-
-	if res.Error != nil {
-		return nil, req.NewServerErrorByError(res.Error)
-	}
-
-	if len(list) == 1 {
-		return &list[0], nil
-	}
-
-	return nil, nil
+type SelectedTradingSystem struct {
+	Id   uint   `json:"id"`
+	Name string `json:"name"`
 }
 
 //=============================================================================
 
-func AddTradingSession(tx *gorm.DB, s *TradingSession) error {
-	return tx.Create(s).Error
+type SelectedReference struct {
+	Id       uint               `json:"id"`
+	ItemType ReferencedItemType `json:"itemType"`
+	MappedTo uint               `json:"mappedTo"`
+}
+
+//=============================================================================
+//===
+//=== Result
+//===
+//=============================================================================
+
+type ImportExecutionResult struct {
+	Items []*ImportedItem
+}
+
+//=============================================================================
+
+type ImportedItem struct {
+	System    *db.TradingSystem
+	Data      *db.DataProduct
+	Broker    *db.BrokerProduct
+	Profile   *db.AgentProfile
+	Session   *db.TradingSession
+	Exchange  *db.Exchange
+	Currency  *db.Currency
+	Portfolio []byte
+	Storage   []byte
 }
 
 //=============================================================================

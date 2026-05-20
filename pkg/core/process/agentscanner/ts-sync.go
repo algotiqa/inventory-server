@@ -37,6 +37,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/inventory-server/pkg/app"
@@ -96,7 +97,7 @@ func getAgentProfiles() (*[]db.AgentProfile, error) {
 	filter := map[string]any{}
 	var list *[]db.AgentProfile
 
-	err := db.RunInTransaction(func(tx *gorm.DB) error {
+	err := dbms.RunInTransaction(func(tx *gorm.DB) error {
 		var err error
 		list, err = db.GetAgentProfiles(tx, filter, 0, 100000)
 		return err
@@ -139,7 +140,7 @@ func collectFromAgent(ap *db.AgentProfile) {
 	if err == nil {
 		slog.Info("Trades successfully retrieved from agent", "username", ap.Username, "systems", strconv.Itoa(len(data)), "agent", ap.Name)
 
-		_ = db.RunInTransaction(func(tx *gorm.DB) error {
+		_ = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			return enqueueAgentTrades(tx, ap, data)
 		})
 	} else {
@@ -275,7 +276,7 @@ func SendTrades(ts *db.TradingSystem, ats *TradingSystem, location *time.Locatio
 		DailyProfits:    dayList,
 	}
 
-	err := msg.SendMessage(msg.ExRuntime, msg.SourceTrade, msg.TypeCreate, message)
+	err := msg.SendMessage(msg.ExRuntime, msg.SourceTrade, msg.TypeCreate, message, nil)
 	if err != nil {
 		slog.Error("SendTrades: Cannot enqueue trades for trading system", "name", ts.Name, "error", err.Error())
 		return err

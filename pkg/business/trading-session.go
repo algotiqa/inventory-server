@@ -35,23 +35,13 @@ import (
 //=============================================================================
 
 func GetTradingSessions(tx *gorm.DB, c *auth.Context, filter map[string]any, offset int, limit int) (*[]*TradingSession, error) {
-	filter["username"] = nil
-	sysList, errs := db.GetTradingSessions(tx, filter, offset, limit)
+	list, err := db.GetTradingSessions(tx, c.Session.Username)
+	if err != nil {
+		return nil, err
+	}
+
+	res,errs := rebuildSessions(c, list)
 	if errs != nil {
-		return nil, errs
-	}
-
-	filter["username"] = c.Session.Username
-	usrList, erru := db.GetTradingSessions(tx, filter, offset, limit)
-	if erru != nil {
-		return nil, erru
-	}
-
-	var res []*TradingSession
-
-	res,errs = rebuildSessions(c, res, sysList)
-	res,erru = rebuildSessions(c, res, usrList)
-	if errs != nil || erru != nil {
 		return nil, req.NewServerError("Unable to rebuild the sessions")
 	}
 
@@ -64,7 +54,9 @@ func GetTradingSessions(tx *gorm.DB, c *auth.Context, filter map[string]any, off
 //===
 //=============================================================================
 
-func rebuildSessions(c *auth.Context, result []*TradingSession, list *[]db.TradingSession) ([]*TradingSession, error) {
+func rebuildSessions(c *auth.Context, list *[]db.TradingSession) ([]*TradingSession, error) {
+	var result []*TradingSession
+
 	for _, dbTs := range *list {
 		sess,err := types.NewTradingSession(dbTs.Session)
 		if err != nil {

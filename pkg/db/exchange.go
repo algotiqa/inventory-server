@@ -60,3 +60,19 @@ func GetExchangeById(tx *gorm.DB, id uint) (*Exchange, error) {
 }
 
 //=============================================================================
+
+func GetExchangesAsMap(tx *gorm.DB) (map[uint]*Exchange, error) {
+	list,err := GetExchanges(tx)
+	if err != nil {
+		return nil, err
+	}
+
+	result := make(map[uint]*Exchange)
+	for _,e := range *list {
+		result[e.Id] = &e
+	}
+
+	return result,nil
+}
+
+//=============================================================================

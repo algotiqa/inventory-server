@@ -1,6 +1,6 @@
 //=============================================================================
 /*
-Copyright © 2023 Andrea Carboni andrea.carboni71@gmail.com
+Copyright © 2026 Andrea Carboni andrea.carboni71@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,54 +22,53 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package db
+package platform
 
 import (
-	"github.com/algotiqa/core"
-	"gorm.io/driver/mysql"
-	"log/slog"
-	"time"
-
-	"gorm.io/gorm"
+	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/inventory-server/pkg/app"
 )
 
 //=============================================================================
-
-var dbms *gorm.DB
-
+//===
+//=== ExportedData
+//===
 //=============================================================================
 
-func InitDatabase(cfg *core.Database) {
-
-	slog.Info("Starting database...")
-	url := cfg.Username + ":" + cfg.Password + "@tcp(" + cfg.Address + ")/" + cfg.Name + "?charset=utf8mb4&parseTime=True"
-
-	dialector := mysql.New(mysql.Config{
-		DSN:                       url,
-		DefaultStringSize:         256,
-		DisableDatetimePrecision:  false,
-		DontSupportRenameIndex:    false,
-		DontSupportRenameColumn:   true,
-		SkipInitializeWithVersion: false,
-	})
-
-	db, err := gorm.Open(dialector, &gorm.Config{})
-	if err != nil {
-		core.ExitWithMessage("Failed to connect to the database: " + err.Error())
-	}
-
-	sqlDB, err := db.DB()
-	sqlDB.SetConnMaxLifetime(time.Minute * 3)
-	sqlDB.SetMaxOpenConns(50)
-	sqlDB.SetMaxIdleConns(10)
-
-	dbms = db
+type ExportedData struct {
+	TradingSystems []*EncodedSystem `json:"tradingSystems"`
 }
 
 //=============================================================================
 
-func RunInTransaction(f func(tx *gorm.DB) error) error {
-	return dbms.Transaction(f)
+type EncodedSystem struct {
+	Id       uint   `json:"id"`
+	JsonData []byte `json:"jsonData"`
+}
+
+//=============================================================================
+//===
+//=== Public methods
+//===
+//=============================================================================
+
+func ExportTradingSystemsFromPortfolio(c *auth.Context, ids []uint) (*ExportedData, error) {
+	c.Log.Info("ExportTradingSystemsFromPortfolio: Retrieving systems from portfolio trader...")
+
+	var exportedData ExportedData
+
+	client := req.GetClient("bf")
+	url := c.Config.(*app.Config).Platform.Portfolio + "/v1/trading-systems/export?"+ addParameters(ids)
+	err := req.DoGet(client, url, &exportedData, c.Token)
+
+	if err != nil {
+		c.Log.Error("ExportTradingSystemsFromPortfolio: Got an error from portfolio trader", "error", err.Error())
+		return nil, req.NewServerError("Cannot communicate with portfolio-trader: %v", err.Error())
+	}
+
+	c.Log.Info("ExportTradingSystemsFromPortfolio: Systems loaded", "systems", len(exportedData.TradingSystems))
+	return &exportedData,nil
 }
 
 //=============================================================================

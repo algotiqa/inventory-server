@@ -1,6 +1,6 @@
 //=============================================================================
 /*
-Copyright © 2023 Andrea Carboni andrea.carboni71@gmail.com
+Copyright © 2026 Andrea Carboni andrea.carboni71@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,69 +22,60 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package db
+package messaging
 
 import (
-	"github.com/algotiqa/core/req"
-	"gorm.io/gorm"
+	"github.com/algotiqa/inventory-server/pkg/db"
 )
 
 //=============================================================================
+//===
+//=== Messages
+//===
+//=============================================================================
 
-func GetCurrencies(tx *gorm.DB) (*[]Currency, error) {
-	var list []Currency
-	res := tx.Find(&list).Order("code")
-
-	if res.Error != nil {
-		return nil, req.NewServerErrorByError(res.Error)
-	}
-
-	return &list, nil
+type TradingSystemMessage struct {
+	TradingSystem  *db.TradingSystem  `json:"tradingSystem"`
+	DataProduct    *db.DataProduct    `json:"dataProduct"`
+	BrokerProduct  *db.BrokerProduct  `json:"brokerProduct"`
+	Currency       *db.Currency       `json:"currency"`
+	TradingSession *db.TradingSession `json:"tradingSession"`
+	AgentProfile   *db.AgentProfile   `json:"agentProfile"`
+	Exchange       *db.Exchange       `json:"exchange"`
+	PortfolioPack  []byte             `json:"portfolioPack"`
+	StoragePack    []byte             `json:"storagePack"`
 }
 
 //=============================================================================
 
-func GetCurrencyById(tx *gorm.DB, id uint) (*Currency, error) {
-	var list []Currency
-	res := tx.Find(&list, id)
-
-	if res.Error != nil {
-		return nil, req.NewServerErrorByError(res.Error)
-	}
-
-	if len(list) == 1 {
-		return &list[0], nil
-	}
-
-	return nil, nil
+type DataProductMessage struct {
+	DataProduct    *db.DataProduct    `json:"dataProduct"`
+	Connection     *db.Connection     `json:"connection"`
+	Exchange       *db.Exchange       `json:"exchange"`
+	TradingSession *db.TradingSession `json:"tradingSession"`
 }
 
 //=============================================================================
 
-func GetCurrenciesAsMap(tx *gorm.DB) (map[uint]*Currency, error) {
-	list,err := GetCurrencies(tx)
-	if err != nil {
-		return nil, err
-	}
-
-	result := make(map[uint]*Currency)
-	for _,c := range *list {
-		result[c.Id] = &c
-	}
-
-	return result,nil
+type BrokerProductMessage struct {
+	BrokerProduct *db.BrokerProduct `json:"brokerProduct"`
+	Connection    *db.Connection    `json:"connection"`
+	Exchange      *db.Exchange      `json:"exchange"`
+	Currency      *db.Currency      `json:"currency"`
 }
 
 //=============================================================================
 
-func UpdateCurrency(tx *gorm.DB, c *Currency) error {
-	return tx.Save(c).Error
+// TradingSessionMessage TODO: To be implemented
+type TradingSessionMessage struct {
+	TradingSession *db.TradingSession `json:"tradingSession"`
 }
 
 //=============================================================================
 
-func AddCurrencyHistory(tx *gorm.DB, ci *CurrencyHistory) error {
-	return tx.Create(ci).Error
+// AgentProfileMessage TODO: To be implemented
+type AgentProfileMessage struct {
+	AgentProfile *db.AgentProfile `json:"agentProfile"`
 }
 
 //=============================================================================

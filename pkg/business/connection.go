@@ -28,6 +28,7 @@ import (
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/inventory-server/pkg/core/messaging"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"github.com/algotiqa/inventory-server/pkg/platform"
 	"gorm.io/gorm"
@@ -143,9 +144,10 @@ func DeleteConnection(tx *gorm.DB, c *auth.Context, id uint) (*db.Connection, er
 		return nil, req.NewServerErrorByError(err)
 	}
 
-	tsm := TradingSystemMessage{}
+	//TODO: wrong message
+	tsm := messaging.TradingSystemMessage{}
 	tsm.TradingSystem = ts
-	err = msg.SendMessage(msg.ExInventory, msg.SourceTradingSystem, msg.TypeDelete, &tsm)
+	err = msg.SendMessage(msg.ExInventory, msg.SourceTradingSystem, msg.TypeDelete, &tsm, tx)
 
 	if err != nil {
 		c.Log.Error("DeleteTradingSystem: Could not publish the delete message", "id", id, "error", err.Error())

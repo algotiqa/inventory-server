@@ -61,6 +61,19 @@ func GetTradingSystemById(tx *gorm.DB, id uint) (*TradingSystem, error) {
 
 //=============================================================================
 
+func GetTradingSystemsById(tx *gorm.DB, username string, ids []uint) (*[]TradingSystem, error) {
+	var list []TradingSystem
+	res := tx.Find(&list, "username = ? and id in ?", username, ids)
+
+	if res.Error != nil {
+		return nil, req.NewServerErrorByError(res.Error)
+	}
+
+	return &list, nil
+}
+
+//=============================================================================
+
 func GetTradingSystemsFull(tx *gorm.DB, filter map[string]any, offset int, limit int) (*[]TradingSystemFull, error) {
 	var list []TradingSystemFull
 

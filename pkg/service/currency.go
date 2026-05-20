@@ -26,15 +26,15 @@ package service
 
 import (
 	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/inventory-server/pkg/business"
-	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
 
 //=============================================================================
 
 func getCurrencies(c *auth.Context) {
-	err := db.RunInTransaction(func(tx *gorm.DB) error {
+	err := dbms.RunInTransaction(func(tx *gorm.DB) error {
 		list, err := business.GetCurrencies(tx)
 
 		if err != nil {

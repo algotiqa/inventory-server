@@ -1,6 +1,6 @@
 //=============================================================================
 /*
-Copyright © 2023 Andrea Carboni andrea.carboni71@gmail.com
+Copyright © 2026 Andrea Carboni andrea.carboni71@gmail.com
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -22,47 +22,27 @@ THE SOFTWARE.
 */
 //=============================================================================
 
-package db
+package platform
 
 import (
-	"github.com/algotiqa/core/req"
-	"gorm.io/gorm"
+	"strconv"
+	"strings"
 )
 
 //=============================================================================
 
-func GetTradingSessions(tx *gorm.DB, username string) (*[]TradingSession, error) {
-	var list []TradingSession
-	res := tx.Find(&list, "username = ? or username is null order by id", username)
+func addParameters(ids []uint) string {
+	var sb strings.Builder
 
-	if res.Error != nil {
-		return nil, req.NewServerErrorByError(res.Error)
+	for i, id := range ids {
+		if i != 0 {
+			sb.WriteString("&")
+		}
+		sb.WriteString("id=")
+		sb.WriteString(strconv.FormatUint(uint64(id), 10))
 	}
 
-	return &list, nil
-}
-
-//=============================================================================
-
-func GetTradingSessionById(tx *gorm.DB, id uint) (*TradingSession, error) {
-	var list []TradingSession
-	res := tx.Find(&list, id)
-
-	if res.Error != nil {
-		return nil, req.NewServerErrorByError(res.Error)
-	}
-
-	if len(list) == 1 {
-		return &list[0], nil
-	}
-
-	return nil, nil
-}
-
-//=============================================================================
-
-func AddTradingSession(tx *gorm.DB, s *TradingSession) error {
-	return tx.Create(s).Error
+	return sb.String()
 }
 
 //=============================================================================

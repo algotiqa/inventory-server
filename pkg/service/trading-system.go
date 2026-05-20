@@ -25,8 +25,16 @@ THE SOFTWARE.
 package service
 
 import (
+	"bytes"
+	"encoding/json"
+	"io"
+	"mime/multipart"
+
 	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/dbms"
+	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/inventory-server/pkg/business"
+	"github.com/algotiqa/inventory-server/pkg/business/importexport"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
@@ -42,7 +50,7 @@ func getTradingSystems(c *auth.Context) {
 		details, err = c.GetParamAsBool("details", false)
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				list, terr := business.GetTradingSystems(tx, c, filter, offset, limit, details)
 
 				if terr != nil {
@@ -64,7 +72,7 @@ func addTradingSystem(c *auth.Context) {
 	err := c.BindParamsFromBody(&tss)
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			ts, terr := business.AddTradingSystem(tx, c, &tss)
 
 			if terr != nil {
@@ -89,7 +97,7 @@ func updateTradingSystem(c *auth.Context) {
 		id, err = c.GetIdFromUrl()
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				var ts *db.TradingSystem
 				ts, err = business.UpdateTradingSystem(tx, c, id, &tss)
 
@@ -111,7 +119,7 @@ func deleteTradingSystem(c *auth.Context) {
 	id, err := c.GetIdFromUrl()
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			ts, err := business.DeleteTradingSystem(tx, c, id)
 
 			if err != nil {
@@ -131,7 +139,7 @@ func finalizeTradingSystem(c *auth.Context) {
 	id, err := c.GetIdFromUrl()
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			ts, terr := business.FinalizeTradingSystem(tx, c, id)
 
 			if terr != nil {
@@ -150,7 +158,7 @@ func reloadTradesFromAgent(c *auth.Context) {
 	id, err := c.GetIdFromUrl()
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			res, terr := business.ReloadTradesFromAgent(tx, c, id)
 
 			if terr != nil {
@@ -161,6 +169,169 @@ func reloadTradesFromAgent(c *auth.Context) {
 		})
 	}
 	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func exportTradingSystems(c *auth.Context) {
+	ids,err := c.GetIdsFromUrl()
+	if err == nil {
+		if len(ids) == 0 {
+			err = req.NewBadRequestError("Parameter 'id' is missing or empty")
+		} else {
+			var data *importexport.TradingSystemsData
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+				res, terr := business.CollectTradingSystemsData(tx, c, ids)
+				data = res
+				return terr
+			})
+
+			if err == nil {
+				var res []byte
+				res,err = business.ExportTradingSystems(c, data)
+				if err == nil {
+					_=c.ReturnData("application/zip", res)
+					return
+				}
+			}
+		}
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func createImportOverview(c *auth.Context) {
+	reader, err := c.Gin.Request.MultipartReader()
+	if err == nil {
+		var part *multipart.Part
+
+		if part, err = reader.NextPart(); err != io.EOF {
+			var spec *business.ImportOverviewSpec
+			spec, err = retrieveImportOverviewSpec(part)
+
+			if err == nil {
+				if part, err = reader.NextPart(); err != io.EOF {
+					var data []byte
+					data, err = getImportPackage(part)
+					_ = part.Close()
+
+					if err == nil {
+						var res *importexport.ImportOverviewResponse
+						err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+							out,errx :=business.CreateImportOverview(tx, c, spec, data)
+							res = out
+							return errx
+						})
+
+						if err == nil {
+							_ = c.ReturnObject(res)
+							return
+						}
+					}
+				}
+			}
+		}
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func executeImportPlan(c *auth.Context) {
+	reader, err := c.Gin.Request.MultipartReader()
+	if err == nil {
+		var part *multipart.Part
+
+		if part, err = reader.NextPart(); err != io.EOF {
+			var spec *business.ImportExecutionSpec
+			spec, err = retrieveImportExecutionSpec(part)
+
+			if err == nil {
+				if part, err = reader.NextPart(); err != io.EOF {
+					var data []byte
+					data, err = getImportPackage(part)
+					_ = part.Close()
+
+					if err == nil {
+						err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+							return business.ExecuteImportPlan(tx, c, spec, data)
+						})
+
+						if err == nil {
+							_ = c.ReturnObject(true)
+							return
+						}
+					}
+				}
+			}
+		}
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+//===
+//=== Private functions
+//===
+//=============================================================================
+
+func retrieveImportOverviewSpec(part *multipart.Part) (*business.ImportOverviewSpec, error) {
+	data, err := io.ReadAll(part)
+
+	if err == nil {
+		var spec business.ImportOverviewSpec
+
+		err = json.Unmarshal(data, &spec)
+
+		if err == nil {
+			err = part.Close()
+
+			if err == nil {
+				return &spec, nil
+			}
+		}
+	}
+
+	return nil, err
+}
+
+//=============================================================================
+
+func retrieveImportExecutionSpec(part *multipart.Part) (*business.ImportExecutionSpec, error) {
+	data, err := io.ReadAll(part)
+
+	if err == nil {
+		var spec business.ImportExecutionSpec
+
+		err = json.Unmarshal(data, &spec)
+
+		if err == nil {
+			err = part.Close()
+
+			if err == nil {
+				return &spec, nil
+			}
+		}
+	}
+
+	return nil, err
+}
+
+//=============================================================================
+
+func getImportPackage(part io.Reader) ([]byte, error) {
+	buf := new(bytes.Buffer)
+	_, err := io.Copy(buf, part)
+
+	if err != nil {
+		return nil,err
+	}
+
+	return buf.Bytes(), nil
 }
 
 //=============================================================================

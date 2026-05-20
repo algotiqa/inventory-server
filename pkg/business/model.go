@@ -25,6 +25,7 @@ THE SOFTWARE.
 package business
 
 import (
+	"github.com/algotiqa/inventory-server/pkg/business/importexport"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"github.com/algotiqa/types"
 )
@@ -119,51 +120,14 @@ type DataProductExt struct {
 }
 
 //=============================================================================
-//===
-//=== Messages
-//===
-//=============================================================================
 
-type TradingSystemMessage struct {
-	TradingSystem  *db.TradingSystem  `json:"tradingSystem"`
-	DataProduct    *db.DataProduct    `json:"dataProduct"`
-	BrokerProduct  *db.BrokerProduct  `json:"brokerProduct"`
-	Currency       *db.Currency       `json:"currency"`
-	TradingSession *db.TradingSession `json:"tradingSession"`
-	AgentProfile   *db.AgentProfile   `json:"agentProfile"`
-	Exchange       *db.Exchange       `json:"exchange"`
+type ImportOverviewSpec struct {
 }
 
 //=============================================================================
 
-type DataProductMessage struct {
-	DataProduct    db.DataProduct    `json:"dataProduct"`
-	Connection     db.Connection     `json:"connection"`
-	Exchange       db.Exchange       `json:"exchange"`
-	TradingSession db.TradingSession `json:"tradingSession"`
-}
-
-//=============================================================================
-
-type BrokerProductMessage struct {
-	BrokerProduct db.BrokerProduct `json:"brokerProduct"`
-	Connection    db.Connection    `json:"connection"`
-	Exchange      db.Exchange      `json:"exchange"`
-	Currency      db.Currency      `json:"currency"`
-}
-
-//=============================================================================
-
-// TradingSessionMessage TODO: To be implemented
-type TradingSessionMessage struct {
-	TradingSession db.TradingSession `json:"tradingSession"`
-}
-
-//=============================================================================
-
-// AgentProfileMessage TODO: To be implemented
-type AgentProfileMessage struct {
-	AgentProfile db.AgentProfile `json:"agentProfile"`
+type ImportExecutionSpec struct {
+	Plan *importexport.ImportPlan
 }
 
 //=============================================================================

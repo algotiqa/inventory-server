@@ -28,6 +28,7 @@ import (
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/inventory-server/pkg/core/messaging"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
@@ -205,8 +206,14 @@ func sendBrokerProductChangeMessage(tx *gorm.DB, c *auth.Context, pb *db.BrokerP
 		return err
 	}
 
-	pbm := BrokerProductMessage{*pb, *conn, *exc, *cur}
-	err = msg.SendMessage(msg.ExInventory, msg.SourceBrokerProduct, msgType, &pbm)
+	pbm := messaging.BrokerProductMessage{
+		BrokerProduct: pb,
+		Connection   : conn,
+		Exchange     : exc,
+		Currency     : cur,
+	}
+
+	err = msg.SendMessage(msg.ExInventory, msg.SourceBrokerProduct, msgType, &pbm, tx)
 
 	if err != nil {
 		c.Log.Error("[Add|Update]BrokerProduct: Could not publish the update message", "error", err.Error())

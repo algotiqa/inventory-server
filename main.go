@@ -28,12 +28,12 @@ import (
 	"log/slog"
 
 	"github.com/algotiqa/core/boot"
+	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/inventory-server/pkg/app"
 	"github.com/algotiqa/inventory-server/pkg/core/messaging/system"
 	"github.com/algotiqa/inventory-server/pkg/core/process"
-	"github.com/algotiqa/inventory-server/pkg/db"
 	"github.com/algotiqa/inventory-server/pkg/service"
 )
 
@@ -49,7 +49,7 @@ func main() {
 	logger := boot.InitLogger(component, &cfg.Application)
 	engine := boot.InitEngine(logger, &cfg.Application)
 	initClients()
-	db.InitDatabase(&cfg.Database)
+	dbms.InitDatabase(&cfg.Database)
 	msg.InitMessaging(&cfg.Messaging)
 	service.Init(engine, cfg, logger)
 	process.Init(cfg)
@@ -61,7 +61,7 @@ func main() {
 
 func initClients() {
 	slog.Info("Initializing clients...")
-	req.AddClient("bf", "ca.crt", "server.crt", "server.key")
+	req.AddDefaultClient("ca.crt", "server.crt", "server.key")
 }
 
 //=============================================================================

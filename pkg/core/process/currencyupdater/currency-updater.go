@@ -29,6 +29,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/inventory-server/pkg/app"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"github.com/algotiqa/types"
@@ -95,7 +96,7 @@ func run() {
 func getCurrencies() ([]*db.Currency, error) {
 	var list *[]db.Currency
 
-	err := db.RunInTransaction(func(tx *gorm.DB) error {
+	err := dbms.RunInTransaction(func(tx *gorm.DB) error {
 		var err error
 		list, err = db.GetCurrencies(tx)
 		return err
@@ -191,7 +192,7 @@ func dateUpdate(currencies []*db.Currency, date types.Date) ([]*db.CurrencyHisto
 //=============================================================================
 
 func saveCurrenciesAndHistory(currencies []*db.Currency, history []*db.CurrencyHistory) error {
-	return db.RunInTransaction(func(tx *gorm.DB) error {
+	return dbms.RunInTransaction(func(tx *gorm.DB) error {
 		for _, cur := range currencies {
 			err := db.UpdateCurrency(tx, cur)
 			if err != nil {

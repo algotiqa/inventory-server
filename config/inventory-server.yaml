@@ -1,22 +1,29 @@
 application:
   bindAddress: :8447
-  production: false
-  debug: false
+  production : false
+  debug      : false
 database:
-  address: localhost:3400
-  name: inventory
+  address : localhost:3400
+  name    : inventory
   username: admin
   password: admin
 authentication:
-  authority: https://algotiqa-server:8443/auth/realms/algotiqa
-  clientId: algotiqa-backend
+  authority   : https://algotiqa-server:8443/auth/realms/algotiqa
+  clientId    : algotiqa-backend
   clientSecret: xyz
 platform:
-  system: https://algotiqa-server:8449/api/system
+  system   : https://algotiqa-server:8449/api/system
+  portfolio: https://algotiqa-server:8445/api/portfolio
+  storage  : https://algotiqa-server:8452/api/storage
 messaging:
-  address: localhost:8450
+  address : localhost:8450
   username: admin
   password: admin
+  journal:
+    directory      : .
+    queueSize      : 1000
+    compactMessages: 1000
+    dbSpoolInterval: 2
 provider:
   currency:
     baseUrl: https://api.freecurrencyapi.com/v1

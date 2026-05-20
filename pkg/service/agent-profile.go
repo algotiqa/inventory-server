@@ -26,8 +26,8 @@ package service
 
 import (
 	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/inventory-server/pkg/business"
-	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -38,7 +38,7 @@ func getAgentProfiles(c *auth.Context) {
 	offset, limit, err := c.GetPagingParams()
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			list, err := business.GetAgentProfiles(tx, c, filter, offset, limit)
 
 			if err != nil {
@@ -58,7 +58,7 @@ func getExternalRefs(c *auth.Context) {
 	id, err := c.GetIdFromUrl()
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			res, terr := business.GetExternalRefs(tx, c, id)
 			if terr != nil {
 				return terr

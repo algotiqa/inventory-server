@@ -219,15 +219,15 @@ type AgentProfile struct {
 //===
 //=============================================================================
 
-func (Currency) TableName() string         { return "currency" }
-func (CurrencyHistory) TableName() string  { return "currency_history" }
-func (Exchange) TableName() string         { return "exchange" }
-func (Connection) TableName() string       { return "connection" }
-func (AgentProfile) TableName() string     { return "agent_profile" }
-func (DataProduct) TableName() string      { return "data_product" }
-func (BrokerProduct) TableName() string    { return "broker_product" }
+func (Currency)         TableName() string { return "currency"          }
+func (CurrencyHistory)  TableName() string { return "currency_history"  }
+func (Exchange)         TableName() string { return "exchange"          }
+func (Connection)       TableName() string { return "connection"        }
+func (AgentProfile)     TableName() string { return "agent_profile"     }
+func (DataProduct)      TableName() string { return "data_product"      }
+func (BrokerProduct)    TableName() string { return "broker_product"    }
 func (BrokerInstrument) TableName() string { return "broker_instrument" }
-func (TradingSession) TableName() string   { return "trading_session" }
-func (TradingSystem) TableName() string    { return "trading_system" }
+func (TradingSession)   TableName() string { return "trading_session"   }
+func (TradingSystem)    TableName() string { return "trading_system"    }
 
 //=============================================================================

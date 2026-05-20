@@ -28,6 +28,7 @@ import (
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/inventory-server/pkg/core/messaging"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
@@ -211,8 +212,14 @@ func sendDataProductChangeMessage(tx *gorm.DB, c *auth.Context, dp *db.DataProdu
 		return req.NewServerError("Could not retrieve some information while sending the data product message")
 	}
 
-	pdm := DataProductMessage{*dp, *conn, *exc, *sess}
-	err = msg.SendMessage(msg.ExInventory, msg.SourceDataProduct, msgType, &pdm)
+	pdm := messaging.DataProductMessage{
+		DataProduct   : dp,
+		Connection    : conn,
+		Exchange      : exc,
+		TradingSession: sess,
+	}
+
+	err = msg.SendMessage(msg.ExInventory, msg.SourceDataProduct, msgType, &pdm, tx)
 
 	if err != nil {
 		c.Log.Error("sendDataProductChangeMessage: Could not publish the update message", "error", err.Error())

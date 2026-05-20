@@ -25,9 +25,14 @@ THE SOFTWARE.
 package business
 
 import (
+	"archive/zip"
+	"bytes"
+
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/inventory-server/pkg/business/importexport"
+	"github.com/algotiqa/inventory-server/pkg/core/messaging"
 	"github.com/algotiqa/inventory-server/pkg/core/process/agentscanner"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
@@ -148,9 +153,9 @@ func DeleteTradingSystem(tx *gorm.DB, c *auth.Context, id uint) (*db.TradingSyst
 		return nil, req.NewServerErrorByError(err)
 	}
 
-	tsm := TradingSystemMessage{}
+	tsm := messaging.TradingSystemMessage{}
 	tsm.TradingSystem = ts
-	err = msg.SendMessage(msg.ExInventory, msg.SourceTradingSystem, msg.TypeDelete, &tsm)
+	err = msg.SendMessage(msg.ExInventory, msg.SourceTradingSystem, msg.TypeDelete, &tsm, tx)
 
 	if err != nil {
 		c.Log.Error("DeleteTradingSystem: Could not publish the delete message", "id", id, "error", err.Error())
@@ -260,6 +265,78 @@ func ReloadTradesFromAgent(tx *gorm.DB, c *auth.Context, id uint) (*TradingSyste
 }
 
 //=============================================================================
+
+func CollectTradingSystemsData(tx *gorm.DB, c *auth.Context, ids []uint) (*importexport.TradingSystemsData, error) {
+	c.Log.Info("CollectTradingSystemsData: Collecting data from database for export...")
+	return importexport.CollectTradingSystemsData(tx, c.Session.Username, ids)
+}
+
+//=============================================================================
+
+func ExportTradingSystems(c *auth.Context, data *importexport.TradingSystemsData) ([]byte, error){
+	c.Log.Info("ExportTradingSystems: Exporting trading systems", "count", len(data.TradingSystems))
+
+	buf       := new(bytes.Buffer)
+	zipWriter := zip.NewWriter(buf)
+
+	err := importexport.WriteMetadata(zipWriter)
+	if err == nil {
+		err = importexport.WriteData(zipWriter, data)
+		if err == nil {
+			err = importexport.WriteTradingSystemsData(c, zipWriter, data.Ids)
+			if err == nil {
+				//--- We cannot defer this, because buf will remain empty
+				_=zipWriter.Close()
+				c.Log.Info("ExportTradingSystems: Export complete, sending data")
+				return buf.Bytes(), nil
+			}
+		}
+	}
+
+	_=zipWriter.Close()
+	return nil, err
+}
+
+//=============================================================================
+
+func CreateImportOverview(tx *gorm.DB, c *auth.Context, spec *ImportOverviewSpec, data []byte) (*importexport.ImportOverviewResponse, error) {
+	c.Log.Info("CreateImportOverview: Creating import overview for trading systems")
+
+	var res *importexport.ImportOverviewResponse
+
+	pack,err := importexport.RebuildPackage(data)
+	if err == nil {
+			res,err = importexport.CreateImportOverview(tx, c.Session.Username, pack)
+	}
+
+	return res,err
+}
+
+//=============================================================================
+
+func ExecuteImportPlan(tx *gorm.DB, c *auth.Context, spec *ImportExecutionSpec, data []byte) error {
+	c.Log.Info("ExecuteImportPlan: Importing trading systems")
+
+	pack,err := importexport.RebuildPackage(data)
+	if err == nil {
+		var overview *importexport.ImportOverviewResponse
+		overview,err = importexport.CreateImportOverview(tx, c.Session.Username, pack)
+		if err == nil {
+			if spec.Plan == nil {
+				return req.NewBadRequestError("Import plan is missing")
+			}
+
+			err = importexport.ExecutePlan(tx, c, pack, spec.Plan, overview)
+			if err == nil {
+				c.Log.Info("ImportTradingSystems: Import complete", "count", len(spec.Plan.TradingSystems))
+			}
+		}
+	}
+
+	return err
+}
+
+//=============================================================================
 //===
 //=== Private functions
 //===
@@ -328,8 +405,19 @@ func sendChangeMessage(tx *gorm.DB, c *auth.Context, ts *db.TradingSystem, msgTy
 		}
 	}
 
-	tsm := TradingSystemMessage{ts, dp, bp, cu, se, ap, ex}
-	err = msg.SendMessage(msg.ExInventory, msg.SourceTradingSystem, msgType, &tsm)
+	tsm := messaging.TradingSystemMessage{
+		TradingSystem : ts,
+		DataProduct   : dp,
+		BrokerProduct : bp,
+		Currency      : cu,
+		TradingSession: se,
+		AgentProfile  : ap,
+		Exchange      : ex,
+		PortfolioPack : nil,
+		StoragePack   : nil,
+	}
+
+	err = msg.SendMessage(msg.ExInventory, msg.SourceTradingSystem, msgType, &tsm, tx)
 
 	if err != nil {
 		c.Log.Error("sendChangeMessage: Could not publish the update message for TS", "error", err.Error(), "id", ts.Id)

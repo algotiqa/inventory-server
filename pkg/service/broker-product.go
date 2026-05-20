@@ -26,8 +26,8 @@ package service
 
 import (
 	"github.com/algotiqa/core/auth"
+	"github.com/algotiqa/core/dbms"
 	"github.com/algotiqa/inventory-server/pkg/business"
-	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
 
@@ -42,7 +42,7 @@ func getBrokerProducts(c *auth.Context) {
 		details, err = c.GetParamAsBool("details", false)
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				list, terr := business.GetBrokerProducts(tx, c, filter, offset, limit, details)
 
 				if terr != nil {
@@ -63,7 +63,7 @@ func getBrokerProductById(c *auth.Context) {
 	id, err := c.GetIdFromUrl()
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			pb, err := business.GetBrokerProductById(tx, c, id)
 
 			if err != nil {
@@ -84,7 +84,7 @@ func addBrokerProduct(c *auth.Context) {
 	err := c.BindParamsFromBody(&pds)
 
 	if err == nil {
-		err = db.RunInTransaction(func(tx *gorm.DB) error {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 			ts, err := business.AddBrokerProduct(tx, c, &pds)
 
 			if err != nil {
@@ -108,7 +108,7 @@ func updateBrokerProduct(c *auth.Context) {
 		id, err := c.GetIdFromUrl()
 
 		if err == nil {
-			err = db.RunInTransaction(func(tx *gorm.DB) error {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
 				ts, err := business.UpdateBrokerProduct(tx, c, id, &pds)
 
 				if err != nil {
