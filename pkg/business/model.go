@@ -131,3 +131,15 @@ type ImportExecutionSpec struct {
 }
 
 //=============================================================================
+//===
+//=== Connections
+//===
+//=============================================================================
+
+type ConnectionExt struct {
+	db.Connection
+	DataProducts   []db.DataProductFull	  `json:"dataProducts"`
+	BrokerProducts []db.BrokerProductFull `json:"brokerProducts"`
+}
+
+//=============================================================================

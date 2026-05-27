@@ -90,6 +90,12 @@ func UpdateConnection(tx *gorm.DB, conn *Connection) error {
 
 //=============================================================================
 
+func DeleteConnection(tx *gorm.DB, id uint) error {
+	return tx.Delete(&Connection{}, id).Error
+}
+
+//=============================================================================
+
 func DisconnectAll(tx *gorm.DB) error {
 	return tx.Model(&Connection{}).
 		Where("supports_multiple_data = false").

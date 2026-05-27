@@ -26,9 +26,7 @@ package business
 
 import (
 	"github.com/algotiqa/core/auth"
-	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/core/req"
-	"github.com/algotiqa/inventory-server/pkg/core/messaging"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"github.com/algotiqa/inventory-server/pkg/platform"
 	"gorm.io/gorm"
@@ -46,7 +44,7 @@ func GetConnections(tx *gorm.DB, c *auth.Context, filter map[string]any, offset 
 
 //=============================================================================
 
-func GetConnectionById(tx *gorm.DB, c *auth.Context, id uint) (*db.Connection, error) {
+func GetConnectionById(tx *gorm.DB, c *auth.Context, id uint) (*ConnectionExt, error) {
 	conn, err := db.GetConnectionById(tx, id)
 	if err != nil {
 		return nil, err
@@ -62,7 +60,16 @@ func GetConnectionById(tx *gorm.DB, c *auth.Context, id uint) (*db.Connection, e
 		}
 	}
 
-	return conn, nil
+	dps,bps,err := getReferences(tx, id)
+	if err != nil {
+		return nil, err
+	}
+
+	return &ConnectionExt{
+		Connection    : *conn,
+		DataProducts  : *dps,
+		BrokerProducts: *bps,
+	}, nil
 }
 
 //=============================================================================
@@ -82,17 +89,17 @@ func AddConnection(tx *gorm.DB, c *auth.Context, cs *ConnectionSpec) (*db.Connec
 	}
 
 	var conn db.Connection
-	conn.Username = c.Session.Username
-	conn.Code = cs.Code
-	conn.Name = cs.Name
-	conn.SystemCode = cs.SystemCode
-	conn.SystemConfigParams = cs.SystemConfigParams
-	conn.SystemName = sys.Name
-	conn.SupportsData = sys.SupportsData
-	conn.SupportsBroker = sys.SupportsBroker
+	conn.Username             = c.Session.Username
+	conn.Code                 = cs.Code
+	conn.Name                 = cs.Name
+	conn.SystemCode           = cs.SystemCode
+	conn.SystemConfigParams   = cs.SystemConfigParams
+	conn.SystemName           = sys.Name
+	conn.SupportsData         = sys.SupportsData
+	conn.SupportsBroker       = sys.SupportsBroker
 	conn.SupportsMultipleData = sys.SupportsMultipleData
-	conn.SupportsInventory = sys.SupportsInventory
-	conn.Connected = conn.SupportsMultipleData
+	conn.SupportsInventory    = sys.SupportsInventory
+	conn.Connected            = conn.SupportsMultipleData
 
 	err = db.AddConnection(tx, &conn)
 
@@ -110,7 +117,7 @@ func AddConnection(tx *gorm.DB, c *auth.Context, cs *ConnectionSpec) (*db.Connec
 func UpdateConnection(tx *gorm.DB, c *auth.Context, id uint, cs *ConnectionSpec) (*db.Connection, error) {
 	c.Log.Info("UpdateConnection: Updating a connection", "id", id, "name", cs.Name)
 
-	conn, err := getConnectionAndCheckAccess(tx, c, id, "UpdateConnection")
+	conn, err := getConnection(tx, c, id, "UpdateConnection")
 	if err != nil {
 		return nil, err
 	}
@@ -128,35 +135,53 @@ func UpdateConnection(tx *gorm.DB, c *auth.Context, id uint, cs *ConnectionSpec)
 }
 
 //=============================================================================
-//TODO
 
-func DeleteConnection(tx *gorm.DB, c *auth.Context, id uint) (*db.Connection, error) {
+const (
+	DeleteStatusOk             = "ok"
+	DeleteStatusConnected      = "connected"
+	DeleteStatusDataProducts   = "dataProducts"
+	DeleteStatusBrokerProducts = "brokerProducts"
+)
+
+//-----------------------------------------------------------------------------
+
+func DeleteConnection(tx *gorm.DB, c *auth.Context, id uint) (string, error) {
 	c.Log.Info("DeleteConnection: Deleting connection", "id", id)
 
-	ts, err := getTradingSystem(tx, c, id, "DeleteTradingSystem")
+	conn, err := getConnection(tx, c, id, "DeleteConnection")
 	if err != nil {
-		return nil, err
+		return "", err
 	}
 
-	err = db.DeleteTradingSystem(tx, id)
-	if err != nil {
-		c.Log.Error("DeleteTradingSystem: Cannot delete trading system", "id", id, "error", err.Error())
-		return nil, req.NewServerErrorByError(err)
+	//--- We cannot delete when we are connected
+
+	if conn.Connected && !conn.SupportsMultipleData {
+		return DeleteStatusConnected, nil
 	}
 
-	//TODO: wrong message
-	tsm := messaging.TradingSystemMessage{}
-	tsm.TradingSystem = ts
-	err = msg.SendMessage(msg.ExInventory, msg.SourceTradingSystem, msg.TypeDelete, &tsm, tx)
+	//--- Check if there are references (not the efficient way, but...)
 
+	dps,bps,err := getReferences(tx, id)
 	if err != nil {
-		c.Log.Error("DeleteTradingSystem: Could not publish the delete message", "id", id, "error", err.Error())
-		return nil, req.NewServerErrorByError(err)
+		return "", err
+	}
+	if len(*dps) > 0 {
+		return DeleteStatusDataProducts, err
+	}
+	if len(*bps) > 0 {
+		return DeleteStatusBrokerProducts, err
 	}
 
-	c.Log.Info("DeleteTradingSystem: Trading system deleted", "id", id, "name", ts.Name)
-	//	return ts, nil
-	return nil, nil
+	//--- Proper delete
+
+	err = db.DeleteConnection(tx, id)
+	if err != nil {
+		c.Log.Error("DeleteConnection: Cannot delete connection", "id", id, "error", err.Error())
+		return "", req.NewServerErrorByError(err)
+	}
+
+	c.Log.Info("DeleteConnection: Connection deleted", "id", id, "name", conn.Name)
+	return DeleteStatusOk, nil
 }
 
 //=============================================================================
@@ -165,7 +190,7 @@ func DeleteConnection(tx *gorm.DB, c *auth.Context, id uint) (*db.Connection, er
 //===
 //=============================================================================
 
-func getConnectionAndCheckAccess(tx *gorm.DB, c *auth.Context, id uint, function string) (*db.Connection, error) {
+func getConnection(tx *gorm.DB, c *auth.Context, id uint, function string) (*db.Connection, error) {
 	conn, err := db.GetConnectionById(tx, id)
 
 	if err != nil {
@@ -186,6 +211,25 @@ func getConnectionAndCheckAccess(tx *gorm.DB, c *auth.Context, id uint, function
 	}
 
 	return conn, nil
+}
+
+//=============================================================================
+
+func getReferences(tx *gorm.DB, id uint) (*[]db.DataProductFull, *[]db.BrokerProductFull, error) {
+	filter := map[string]any{}
+	filter["connection_id"] = id
+
+	dps,err := db.GetDataProductsFull(tx, filter, 0, 5000)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	bps,err := db.GetBrokerProductsFull(tx, filter, 0, 5000)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	return dps, bps, nil
 }
 
 //=============================================================================
