@@ -124,3 +124,23 @@ func updateBrokerProduct(c *auth.Context) {
 }
 
 //=============================================================================
+
+func deleteBrokerProduct(c *auth.Context) {
+	id, err := c.GetIdFromUrl()
+
+	if err == nil {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+			ts, err := business.DeleteBrokerProduct(tx, c, id)
+
+			if err != nil {
+				return err
+			}
+
+			return c.ReturnObject(ts)
+		})
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================

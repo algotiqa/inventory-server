@@ -54,6 +54,7 @@ func Init(router *gin.Engine, cfg *app.Config, logger *slog.Logger) {
 	router.POST  ("/api/inventory/v1/broker-products",     ctrl.Secure(addBrokerProduct,     roles.Admin_User_Service))
 	router.GET   ("/api/inventory/v1/broker-products/:id", ctrl.Secure(getBrokerProductById, roles.Admin_User_Service))
 	router.PUT   ("/api/inventory/v1/broker-products/:id", ctrl.Secure(updateBrokerProduct,  roles.Admin_User_Service))
+	router.DELETE("/api/inventory/v1/broker-products/:id", ctrl.Secure(deleteBrokerProduct,  roles.Admin_User_Service))
 
 	router.GET   ("/api/inventory/v1/trading-systems",                   ctrl.Secure(getTradingSystems,     roles.Admin_User_Service))
 	router.POST  ("/api/inventory/v1/trading-systems",                   ctrl.Secure(addTradingSystem,      roles.Admin_User_Service))

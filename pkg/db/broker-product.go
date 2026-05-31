@@ -92,6 +92,12 @@ func UpdateBrokerProduct(tx *gorm.DB, pb *BrokerProduct) error {
 }
 
 //=============================================================================
+
+func DeleteBrokerProduct(tx *gorm.DB, id uint) error {
+	return tx.Delete(&BrokerProduct{}, id).Error
+}
+
+//=============================================================================
 //===
 //=== Broker instruments
 //===

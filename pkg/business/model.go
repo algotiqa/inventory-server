@@ -107,8 +107,9 @@ func NewTradingSystemReloadResponse() *TradingSystemReloadResponse {
 
 type BrokerProductExt struct {
 	db.BrokerProduct
-	Connection db.Connection `json:"connection"`
-	Exchange   db.Exchange   `json:"exchange"`
+	Connection     *db.Connection          `json:"connection"`
+	Exchange       *db.Exchange            `json:"exchange"`
+	TradingSystems *[]db.TradingSystemFull `json:"tradingSystems"`
 }
 
 //=============================================================================
@@ -141,5 +142,15 @@ type ConnectionExt struct {
 	DataProducts   []db.DataProductFull	  `json:"dataProducts"`
 	BrokerProducts []db.BrokerProductFull `json:"brokerProducts"`
 }
+
+//=============================================================================
+
+const (
+	DeleteStatusOk             = "ok"
+	DeleteStatusConnected      = "connected"
+	DeleteStatusDataProducts   = "dataProducts"
+	DeleteStatusBrokerProducts = "brokerProducts"
+	DeleteStatusTradingSystems = "tradingSystems"
+)
 
 //=============================================================================

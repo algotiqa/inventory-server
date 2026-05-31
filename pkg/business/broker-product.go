@@ -52,7 +52,7 @@ func GetBrokerProducts(tx *gorm.DB, c *auth.Context, filter map[string]any, offs
 func GetBrokerProductById(tx *gorm.DB, c *auth.Context, id uint) (*BrokerProductExt, error) {
 	c.Log.Info("GetBrokerProductById: Getting a broker product", "id", id)
 
-	bp, err := getBrokerProductAndCheckAccess(tx, c, id, "GetBrokerProductById")
+	bp, err := getBrokerProduct(tx, c, id, "GetBrokerProductById")
 	if err != nil {
 		return nil, err
 	}
@@ -73,12 +73,23 @@ func GetBrokerProductById(tx *gorm.DB, c *auth.Context, id uint) (*BrokerProduct
 		return nil, err
 	}
 
+	//--- Get trading systems
+
+	filter := make(map[string]any)
+	filter["broker_product_id"] = id
+	tss,err := db.GetTradingSystemsFull(tx, filter, 0, 5000)
+	if err != nil {
+		c.Log.Error("GetBrokerProductById: Could not retrieve trading systems", "error", err.Error())
+		return nil, err
+	}
+
 	//--- Put all together
 
 	bpe := BrokerProductExt{
-		BrokerProduct: *bp,
-		Connection:    *conn,
-		Exchange:      *ex,
+		BrokerProduct : *bp,
+		Connection    : conn,
+		Exchange      : ex,
+		TradingSystems: tss,
 	}
 
 	return &bpe, nil
@@ -90,17 +101,17 @@ func AddBrokerProduct(tx *gorm.DB, c *auth.Context, bps *BrokerProductSpec) (*db
 	c.Log.Info("AddBrokerProduct: Adding a new broker product", "symbol", bps.Symbol, "name", bps.Name)
 
 	var pb db.BrokerProduct
-	pb.ConnectionId = bps.ConnectionId
-	pb.ExchangeId = bps.ExchangeId
-	pb.Username = c.Session.Username
-	pb.Symbol = bps.Symbol
-	pb.Name = bps.Name
-	pb.PointValue = bps.PointValue
+	pb.ConnectionId     = bps.ConnectionId
+	pb.ExchangeId       = bps.ExchangeId
+	pb.Username         = c.Session.Username
+	pb.Symbol           = bps.Symbol
+	pb.Name             = bps.Name
+	pb.PointValue       = bps.PointValue
 	pb.CostPerOperation = bps.CostPerOperation
-	pb.MarginValue = bps.MarginValue
-	pb.Increment = bps.Increment
-	pb.MarketType = bps.MarketType
-	pb.ProductType = bps.ProductType
+	pb.MarginValue      = bps.MarginValue
+	pb.Increment        = bps.Increment
+	pb.MarketType       = bps.MarketType
+	pb.ProductType      = bps.ProductType
 
 	err := db.AddBrokerProduct(tx, &pb)
 
@@ -123,20 +134,20 @@ func AddBrokerProduct(tx *gorm.DB, c *auth.Context, bps *BrokerProductSpec) (*db
 func UpdateBrokerProduct(tx *gorm.DB, c *auth.Context, id uint, pbs *BrokerProductSpec) (*db.BrokerProduct, error) {
 	c.Log.Info("UpdateBrokerProduct: Updating a broker product", "id", id, "name", pbs.Name)
 
-	pb, err := getBrokerProductAndCheckAccess(tx, c, id, "UpdateBrokerProduct")
+	pb, err := getBrokerProduct(tx, c, id, "UpdateBrokerProduct")
 	if err != nil {
 		return nil, err
 	}
 
-	pb.ExchangeId = pbs.ExchangeId
-	pb.Symbol = pbs.Symbol
-	pb.Name = pbs.Name
-	pb.PointValue = pbs.PointValue
+	pb.ExchangeId       = pbs.ExchangeId
+	pb.Symbol           = pbs.Symbol
+	pb.Name             = pbs.Name
+	pb.PointValue       = pbs.PointValue
 	pb.CostPerOperation = pbs.CostPerOperation
-	pb.MarginValue = pbs.MarginValue
-	pb.Increment = pbs.Increment
-	pb.MarketType = pbs.MarketType
-	pb.ProductType = pbs.ProductType
+	pb.MarginValue      = pbs.MarginValue
+	pb.Increment        = pbs.Increment
+	pb.MarketType       = pbs.MarketType
+	pb.ProductType      = pbs.ProductType
 
 	err = db.UpdateBrokerProduct(tx, pb)
 	if err != nil {
@@ -153,12 +164,52 @@ func UpdateBrokerProduct(tx *gorm.DB, c *auth.Context, id uint, pbs *BrokerProdu
 }
 
 //=============================================================================
+
+func DeleteBrokerProduct(tx *gorm.DB, c *auth.Context, id uint) (string, error) {
+	c.Log.Info("DeleteBrokerProduct: Deleting broker product", "id", id)
+
+	bp, err := getBrokerProduct(tx, c, id, "DeleteBrokerProduct")
+	if err != nil {
+		return "", err
+	}
+
+	//--- Check if there are references (not the efficient way, but...)
+
+	filter := map[string]any{}
+	filter["broker_product_id"] = id
+
+	tss,err := db.GetTradingSystems(tx, filter, 0, 5000)
+	if err != nil {
+		return "", err
+	}
+	if len(*tss) > 0 {
+		return DeleteStatusTradingSystems, err
+	}
+
+	//--- Proper delete
+
+	err = db.DeleteBrokerProduct(tx, id)
+	if err != nil {
+		c.Log.Error("DeleteBrokerProduct: Cannot delete broker product", "id", id, "error", err.Error())
+		return "", req.NewServerErrorByError(err)
+	}
+
+	err = sendBrokerProductChangeMessage(tx, c, bp, msg.TypeDelete)
+	if err != nil {
+		return "", err
+	}
+
+	c.Log.Info("DeleteBrokerProduct: Broker product deleted", "id", id, "name", bp.Name)
+	return DeleteStatusOk, nil
+}
+
+//=============================================================================
 //===
 //=== Private functions
 //===
 //=============================================================================
 
-func getBrokerProductAndCheckAccess(tx *gorm.DB, c *auth.Context, id uint, function string) (*db.BrokerProduct, error) {
+func getBrokerProduct(tx *gorm.DB, c *auth.Context, id uint, function string) (*db.BrokerProduct, error) {
 	pb, err := db.GetBrokerProductById(tx, id)
 
 	if err != nil {
@@ -184,7 +235,6 @@ func getBrokerProductAndCheckAccess(tx *gorm.DB, c *auth.Context, id uint, funct
 //=============================================================================
 
 func sendBrokerProductChangeMessage(tx *gorm.DB, c *auth.Context, pb *db.BrokerProduct, msgType int) error {
-
 	var exc *db.Exchange
 	var cur *db.Currency
 

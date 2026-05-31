@@ -136,15 +136,6 @@ func UpdateConnection(tx *gorm.DB, c *auth.Context, id uint, cs *ConnectionSpec)
 
 //=============================================================================
 
-const (
-	DeleteStatusOk             = "ok"
-	DeleteStatusConnected      = "connected"
-	DeleteStatusDataProducts   = "dataProducts"
-	DeleteStatusBrokerProducts = "brokerProducts"
-)
-
-//-----------------------------------------------------------------------------
-
 func DeleteConnection(tx *gorm.DB, c *auth.Context, id uint) (string, error) {
 	c.Log.Info("DeleteConnection: Deleting connection", "id", id)
 
