@@ -91,3 +91,9 @@ func UpdateDataProduct(tx *gorm.DB, ts *DataProduct) error {
 }
 
 //=============================================================================
+
+func DeleteDataProduct(tx *gorm.DB, id uint) error {
+	return tx.Delete(&DataProduct{}, id).Error
+}
+
+//=============================================================================

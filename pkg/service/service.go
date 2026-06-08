@@ -49,6 +49,7 @@ func Init(router *gin.Engine, cfg *app.Config, logger *slog.Logger) {
 	router.POST  ("/api/inventory/v1/data-products",       ctrl.Secure(addDataProduct,     roles.Admin_User_Service))
 	router.GET   ("/api/inventory/v1/data-products/:id",   ctrl.Secure(getDataProductById, roles.Admin_User_Service))
 	router.PUT   ("/api/inventory/v1/data-products/:id",   ctrl.Secure(updateDataProduct,  roles.Admin_User_Service))
+	router.DELETE("/api/inventory/v1/data-products/:id",   ctrl.Secure(deleteDataProduct,  roles.Admin_User_Service))
 
 	router.GET   ("/api/inventory/v1/broker-products",     ctrl.Secure(getBrokerProducts,    roles.Admin_User_Service))
 	router.POST  ("/api/inventory/v1/broker-products",     ctrl.Secure(addBrokerProduct,     roles.Admin_User_Service))

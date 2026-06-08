@@ -124,3 +124,23 @@ func updateDataProduct(c *auth.Context) {
 }
 
 //=============================================================================
+
+func deleteDataProduct(c *auth.Context) {
+	id, err := c.GetIdFromUrl()
+
+	if err == nil {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+			ts, err := business.DeleteDataProduct(tx, c, id)
+
+			if err != nil {
+				return err
+			}
+
+			return c.ReturnObject(ts)
+		})
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================

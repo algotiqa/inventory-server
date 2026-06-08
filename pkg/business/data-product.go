@@ -52,7 +52,7 @@ func GetDataProducts(tx *gorm.DB, c *auth.Context, filter map[string]any, offset
 func GetDataProductById(tx *gorm.DB, c *auth.Context, id uint) (*DataProductExt, error) {
 	c.Log.Info("GetDataProductById: Getting a data product", "id", id)
 
-	pd, err := getDataProductAndCheckAccess(tx, c, id, "GetDataProductById")
+	pd, err := getDataProduct(tx, c, id, "GetDataProductById")
 	if err != nil {
 		return nil, err
 	}
@@ -128,7 +128,7 @@ func UpdateDataProduct(tx *gorm.DB, c *auth.Context, id uint, dps *DataProductSp
 		return nil, err
 	}
 
-	pd, err := getDataProductAndCheckAccess(tx, c, id, "UpdateDataProduct")
+	pd, err := getDataProduct(tx, c, id, "UpdateDataProduct")
 	if err != nil {
 		return nil, err
 	}
@@ -137,7 +137,9 @@ func UpdateDataProduct(tx *gorm.DB, c *auth.Context, id uint, dps *DataProductSp
 
 	pd.Name        = dps.Name
 	pd.MarketType  = dps.MarketType
-	pd.ProductType = dps.ProductType
+
+	//Doesn't make sense to change from a futures to a forex or options
+	//pd.ProductType = dps.ProductType
 
 	//TODO: Should we allow to modify these? Some recomputation is required
 	//pd.Months          = pds.Months
@@ -158,12 +160,52 @@ func UpdateDataProduct(tx *gorm.DB, c *auth.Context, id uint, dps *DataProductSp
 }
 
 //=============================================================================
+
+func DeleteDataProduct(tx *gorm.DB, c *auth.Context, id uint) (string, error) {
+	c.Log.Info("DeleteDataProduct: Deleting data product", "id", id)
+
+	dp, err := getDataProduct(tx, c, id, "DeleteDataProduct")
+	if err != nil {
+		return "", err
+	}
+
+	//--- Check if there are references (not the efficient way, but...)
+
+	filter := map[string]any{}
+	filter["data_product_id"] = id
+
+	tss,err := db.GetTradingSystems(tx, filter, 0, 5000)
+	if err != nil {
+		return "", err
+	}
+	if len(*tss) > 0 {
+		return DeleteStatusTradingSystems, err
+	}
+
+	//--- Proper delete
+
+	err = db.DeleteDataProduct(tx, id)
+	if err != nil {
+		c.Log.Error("DeleteDataProduct: Cannot delete data product", "id", id, "error", err.Error())
+		return "", req.NewServerErrorByError(err)
+	}
+
+	err = sendDataProductChangeMessage(tx, c, dp, msg.TypeDelete)
+	if err != nil {
+		return "", err
+	}
+
+	c.Log.Info("DeleteDataProduct: Data product deleted", "id", id, "name", dp.Name)
+	return DeleteStatusOk, nil
+}
+
+//=============================================================================
 //===
 //=== Private functions
 //===
 //=============================================================================
 
-func getDataProductAndCheckAccess(tx *gorm.DB, c *auth.Context, id uint, function string) (*db.DataProduct, error) {
+func getDataProduct(tx *gorm.DB, c *auth.Context, id uint, function string) (*db.DataProduct, error) {
 	pd, err := db.GetDataProductById(tx, id)
 
 	if err != nil {
