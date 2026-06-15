@@ -33,7 +33,6 @@ import (
 	"net/http"
 	"os"
 	"slices"
-	"strconv"
 	"strings"
 	"time"
 
@@ -42,7 +41,6 @@ import (
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/inventory-server/pkg/app"
 	"github.com/algotiqa/inventory-server/pkg/db"
-	"github.com/algotiqa/types"
 	"gorm.io/gorm"
 )
 
@@ -115,12 +113,16 @@ func runAgent(ap *db.AgentProfile) {
 		delay = ap.ScanInterval
 	}
 
-	delay--
+	//--- 0 disables scanning
 
-	if delay == 0 {
-		agentMap[ap.Id] = ap.ScanInterval
-		collectFromAgent(ap)
-	} else {
+	if delay != 0 {
+		delay--
+
+		if delay == 0 {
+			delay = ap.ScanInterval
+			collectFromAgent(ap)
+		}
+
 		agentMap[ap.Id] = delay
 	}
 }
@@ -133,18 +135,29 @@ func collectFromAgent(ap *db.AgentProfile) {
 		return
 	}
 
-	var data []TradingSystem
+	var names []string
 
-	err := req.DoGet(client, ap.RemoteUrl+UrlGetTradingSystems, &data, "")
+	err := req.DoGet(client, ap.RemoteUrl + UrlTradingSystems, &names, "")
+	if err != nil {
+		slog.Error("Cannot connect to agent", "error", err.Error())
+		return
+	}
 
-	if err == nil {
-		slog.Info("Trades successfully retrieved from agent", "username", ap.Username, "systems", strconv.Itoa(len(data)), "agent", ap.Name)
+	slog.Info("Trading system names successfully retrieved from agent", "username", ap.Username, "systems", len(names), "agent", ap.Name)
+
+	var ts TradingSystem
+
+	for _, name := range names {
+		rq := &TradingSystemRequest{ name }
+		err = req.DoPost(client, ap.RemoteUrl + UrlTradingSystems, &rq, &ts, "")
+		if err != nil {
+			slog.Error("Cannot connect to agent", "error", err.Error(), "system", name)
+			continue
+		}
 
 		_ = dbms.RunInTransaction(func(tx *gorm.DB) error {
-			return enqueueAgentTrades(tx, ap, data)
+			return enqueueAgentTrades(tx, ap, &ts)
 		})
-	} else {
-		slog.Error("Cannot connect to agent", "error", err.Error())
 	}
 }
 
@@ -180,31 +193,30 @@ func CreateClient(agentCert string, agentKey string, caCert string) *http.Client
 }
 
 //=============================================================================
+//=== An error aborts the transaction
 
-func enqueueAgentTrades(tx *gorm.DB, ap *db.AgentProfile, agentTss []TradingSystem) error {
-	for _, ats := range agentTss {
-		ts, err := db.GetTradingSystemByExtRef(tx, ap.Username, ats.Name)
+func enqueueAgentTrades(tx *gorm.DB, ap *db.AgentProfile, ats *TradingSystem) error {
+	ts, err := db.GetTradingSystemByExtRef(tx, ap.Username, ats.Name)
 
-		if err != nil {
-			slog.Error("enqueueAgentTrades: Cannot find trading system", "externalRef", ats.Name, "error", err.Error())
-			return err
-		}
+	if err != nil {
+		slog.Error("enqueueAgentTrades: Cannot find trading system", "externalRef", ats.Name, "error", err.Error())
+		return err
+	}
 
-		if ts == nil {
-			slog.Warn("Trading system was not found. Skipping", "externalRef", ats.Name, "username", ap.Username)
-			continue
-		}
+	if ts == nil {
+		slog.Warn("Trading system was not found. Skipping", "externalRef", ats.Name, "username", ap.Username)
+		return nil
+	}
 
-		location, err := GetLocation(tx, ts)
-		if err != nil {
-			slog.Warn("Cannot retrieve timezone for trading system. Skipping", "externalRef", ats.Name, "username", ap.Username, "error", err)
-			continue
-		}
+	location, err := GetLocation(tx, ts)
+	if err != nil {
+		slog.Warn("Cannot retrieve timezone for trading system. Skipping", "externalRef", ats.Name, "username", ap.Username, "error", err)
+		return nil
+	}
 
-		err = SendTrades(ts, &ats, location, false)
-		if err != nil {
-			return err
-		}
+	err = SendTrades(ts, ats, location, false)
+	if err != nil {
+		return err
 	}
 
 	return nil
@@ -218,15 +230,19 @@ func GetLocation(tx *gorm.DB, ts *db.TradingSystem) (*time.Location, error) {
 		slog.Error("getLocation: Could not retrieve broker product of TS", "error", err.Error(), "id", ts.Id)
 		return nil, err
 	}
+	if bp == nil {
+		slog.Error("getLocation: Could not retrieve broker product of TS", "id", ts.Id)
+		return nil, errors.New("Could not retrieve broker product of TS")
+	}
 
 	ex, err := db.GetExchangeById(tx, bp.ExchangeId)
 	if err != nil {
 		slog.Error("getLocation: Could not retrieve exchange of TS", "error", err.Error(), "id", ts.Id)
 		return nil, err
 	}
-
-	if ex.Timezone == "utc" {
-		return time.UTC, nil
+	if ex == nil {
+		slog.Error("getLocation: Could not retrieve exchange of TS", "id", ts.Id)
+		return nil, errors.New("Could not retrieve exchange of TS")
 	}
 
 	return time.LoadLocation(ex.Timezone)
@@ -253,17 +269,15 @@ func SendTrades(ts *db.TradingSystem, ats *TradingSystem, location *time.Locatio
 		}
 	}
 
-	//--- Collect daily profits
+	var equity []*EquityBarItem
 
-	var dayList []*DailyProfitItem
-
-	for _, tl := range ats.TradeLists {
-		for _, adp := range tl.DailyProfits {
-			dp := createDailyProfit(adp, location)
-			if dp == nil {
+	if len(ats.TradeLists) > 0 {
+		tl := ats.TradeLists[len(ats.TradeLists) -1]
+		if tl.OpenTrade != nil {
+			equity = createEquity(tl.OpenTrade, location)
+			if equity == nil {
 				return errors.New("aborted")
 			}
-			dayList = append(dayList, dp)
 		}
 	}
 
@@ -271,18 +285,18 @@ func SendTrades(ts *db.TradingSystem, ats *TradingSystem, location *time.Locatio
 
 	message := TradeListMessage{
 		TradingSystemId: ts.Id,
-		Reload:          reload,
-		Trades:          tradeList,
-		DailyProfits:    dayList,
+		Reload         : reload,
+		Trades         : tradeList,
+		OpenTrade      : equity,
 	}
 
 	err := msg.SendMessage(msg.ExRuntime, msg.SourceTrade, msg.TypeCreate, message, nil)
 	if err != nil {
 		slog.Error("SendTrades: Cannot enqueue trades for trading system", "name", ts.Name, "error", err.Error())
 		return err
-	} else {
-		slog.Info("SendTrades: Enqueued trades for trading system", "name", ts.Name, "username", ts.Username)
 	}
+
+	slog.Info("SendTrades: Enqueued trades for trading system", "name", ts.Name, "username", ts.Username)
 
 	return nil
 }
@@ -314,7 +328,7 @@ func createTrade(extRef string, atr *Trade, loc *time.Location) *TradeItem {
 	}
 
 	entryDate, err1 := parseDate(atr.EntryDate, atr.EntryTime, loc)
-	exitDate, err2 := parseDate(atr.ExitDate, atr.ExitTime, loc)
+	exitDate,  err2 := parseDate(atr.ExitDate,  atr.ExitTime,  loc)
 
 	if err1 != nil {
 		slog.Error("createTrade: Cannot parse entry date/time", "entryDate", atr.EntryDate, "entryTime", atr.EntryTime, "name", extRef)
@@ -326,38 +340,52 @@ func createTrade(extRef string, atr *Trade, loc *time.Location) *TradeItem {
 		return nil
 	}
 
-	if atr.Contracts == 0 {
+	if atr.MaxContracts == 0 {
 		slog.Error("createTrade: Cannot manage 0 contracts", "name", extRef)
 		return nil
 	}
 
+	equity := createEquity(atr.Equity, loc)
+	if equity == nil {
+		return nil
+	}
+
 	return &TradeItem{
-		TradeType:   tradeType,
-		EntryDate:   &entryDate,
-		EntryPrice:  atr.EntryPrice,
-		EntryLabel:  atr.EntryLabel,
-		ExitDate:    &exitDate,
-		ExitPrice:   atr.ExitPrice,
-		ExitLabel:   atr.ExitLabel,
-		GrossProfit: atr.GrossProfit,
-		Contracts:   atr.Contracts,
+		TradeType   : tradeType,
+		EntryDate   : &entryDate,
+		EntryPrice  : atr.EntryPrice,
+		EntryLabel  : atr.EntryLabel,
+		ExitDate    : &exitDate,
+		ExitPrice   : atr.ExitPrice,
+		ExitLabel   : atr.ExitLabel,
+		GrossReturn : atr.GrossReturn,
+		MaxContracts: atr.MaxContracts,
+		Equity      : equity,
 	}
 }
 
 //=============================================================================
 
-func createDailyProfit(dp *DailyProfit, loc *time.Location) *DailyProfitItem {
-	date, err := parseDate(dp.Date, dp.Time, loc)
-	if err != nil {
-		slog.Error("createDailyProfit: Cannot parse date/time", "date", dp.Date, "time", dp.Time, "error", err)
-		return nil
+func createEquity(list []*EquityBar, loc *time.Location) []*EquityBarItem {
+	var result []*EquityBarItem
+
+	for _, eb := range list {
+		date, err := parseDate(eb.Date, eb.Time, loc)
+		if err != nil {
+			slog.Error("createEquity: Cannot parse date/time", "date", eb.Date, "time", eb.Time, "error", err)
+			return nil
+		}
+
+		ebi := &EquityBarItem{
+			Date       : date,
+			GrossReturn: eb.GrossReturn,
+			Contracts  : eb.Contracts,
+		}
+
+		result = append(result, ebi)
 	}
 
-	return &DailyProfitItem{
-		Day:         int(types.ToDate(&date)),
-		GrossProfit: dp.GrossProfit,
-		Trades:      dp.Trades,
-	}
+	return result
 }
 
 //=============================================================================

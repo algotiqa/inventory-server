@@ -215,7 +215,7 @@ func FinalizeTradingSystem(tx *gorm.DB, c *auth.Context, id uint) (*Finalization
 
 //=============================================================================
 
-type TradingSystemReloadRequest struct {
+type TradingSystemRequest struct {
 	Name string `json:"name"`
 }
 
@@ -458,10 +458,10 @@ func callAgentToReloadSystem(c *auth.Context, ap *db.AgentProfile, ts *db.Tradin
 	}
 
 	var ats agentscanner.TradingSystem
-	params := &TradingSystemReloadRequest{
+	params := &TradingSystemRequest{
 		Name: ts.ExternalRef,
 	}
-	err := req.DoPost(client, ap.RemoteUrl+agentscanner.UrlReloadTradingSystem, params, &ats, "")
+	err := req.DoPost(client, ap.RemoteUrl+agentscanner.UrlTradingSystems, params, &ats, "")
 	if err != nil {
 		c.Log.Error("ReloadTradingSystem: Agent raised an error", "id", ap.Id, "error", err.Error())
 		return nil, req.NewServiceUnavailableError("Agent raised an error : " + err.Error())

@@ -97,7 +97,7 @@ func callAgentToGetExternalRefs(c *auth.Context, ap *db.AgentProfile) ([]string,
 	}
 
 	var list []string
-	err := req.DoGet(client, ap.RemoteUrl+agentscanner.UrlListTradingSystem, &list, "")
+	err := req.DoGet(client, ap.RemoteUrl + agentscanner.UrlTradingSystems, &list, "")
 	if err != nil {
 		c.Log.Error("callAgentToGetExternalRefs: Agent raised an error", "id", ap.Id, "error", err.Error())
 		return nil, req.NewServiceUnavailableError("Agent raised an error : " + err.Error())
