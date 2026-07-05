@@ -3,3 +3,4 @@ config/*.crt
 config/*.key
 log/*.log
 *.iml
+journal.bin
