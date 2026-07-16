@@ -84,9 +84,9 @@ type BrokerProduct struct {
 	ExchangeCode     string     `json:"exchangeCode"`
 	Symbol           string     `json:"symbol"`
 	Name             string     `json:"name"`
-	PointValue       float32    `json:"pointValue"`
-	CostPerOperation float32    `json:"costPerOperation"`
-	MarginValue      float32    `json:"marginValue"`
+	PointValue       float64    `json:"pointValue"`
+	CostPerOperation float64    `json:"costPerOperation"`
+	MarginValue      float64    `json:"marginValue"`
 	Increment        float64    `json:"increment"`
 	MarketType       string     `json:"marketType"`
 	ProductType      string     `json:"productType"`

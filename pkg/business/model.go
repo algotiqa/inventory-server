@@ -49,9 +49,9 @@ type BrokerProductSpec struct {
 	ExchangeId       uint    `json:"exchangeId"       binding:"required"`
 	Symbol           string  `json:"symbol"           binding:"required"`
 	Name             string  `json:"name"             binding:"required"`
-	PointValue       float32 `json:"pointValue"       binding:"min=0,max=1000000"`
-	CostPerOperation float32 `json:"costPerOperation" binding:"min=0,max=10000"`
-	MarginValue      float32 `json:"marginValue"      binding:"min=0,max=1000000"`
+	PointValue       float64 `json:"pointValue"       binding:"min=0,max=1000000"`
+	CostPerOperation float64 `json:"costPerOperation" binding:"min=0,max=10000"`
+	MarginValue      float64 `json:"marginValue"      binding:"min=0,max=1000000"`
 	Increment        float64 `json:"increment"        binding:"min=0,max=1"`
 	MarketType       string  `json:"marketType"       binding:"required"`
 	ProductType      string  `json:"productType"      binding:"required"`

@@ -264,13 +264,13 @@ func createBrokerProductMatchNotes(bp *BrokerProduct, dbBp *db.BrokerProductFull
 		addMatchDiff(&sb, "productType", bp.ProductType, dbBp.ProductType)
 	}
 	if bp.PointValue != dbBp.PointValue {
-		addMatchDiff(&sb, "pointValue", s32(bp.PointValue), s32(dbBp.PointValue))
+		addMatchDiff(&sb, "pointValue", s64(bp.PointValue), s64(dbBp.PointValue))
 	}
 	if bp.CostPerOperation != dbBp.CostPerOperation {
-		addMatchDiff(&sb, "costPerOperation", s32(bp.CostPerOperation), s32(dbBp.CostPerOperation))
+		addMatchDiff(&sb, "costPerOperation", s64(bp.CostPerOperation), s64(dbBp.CostPerOperation))
 	}
 	if bp.MarginValue != dbBp.MarginValue {
-		addMatchDiff(&sb, "marginValue", s32(bp.MarginValue), s32(dbBp.MarginValue))
+		addMatchDiff(&sb, "marginValue", s64(bp.MarginValue), s64(dbBp.MarginValue))
 	}
 	if bp.Increment != dbBp.Increment {
 		addMatchDiff(&sb, "increment", s64(bp.Increment), s64(dbBp.Increment))
