@@ -12,12 +12,12 @@ package importexport
 import (
 	"archive/zip"
 	"bytes"
-	"encoding/json"
 	"io"
 	"time"
 
 	"github.com/algotiqa/core/auth"
 	"github.com/algotiqa/core/req"
+	"github.com/algotiqa/inventory-server/pkg/core"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"github.com/algotiqa/inventory-server/pkg/platform"
 	"gorm.io/gorm"
@@ -85,7 +85,7 @@ func WriteMetadata(zipWriter *zip.Writer) error {
 		ExportDate: time.Now(),
 	}
 
-	return writeFile(zipWriter, MetadataFileName, md)
+	return core.WriteJsonInZip(zipWriter, MetadataFileName, md)
 }
 
 //=============================================================================
@@ -128,7 +128,7 @@ func WriteData(zipWriter *zip.Writer, data *TradingSystemsData) error {
 		ed.TradingSystems = append(ed.TradingSystems, tsc)
 	}
 
-	return writeFile(zipWriter, InventoryFileName, ed)
+	return core.WriteJsonInZip(zipWriter, InventoryFileName, ed)
 }
 
 //=============================================================================
@@ -150,13 +150,13 @@ func WriteTradingSystemsData(c *auth.Context, zipWriter *zip.Writer, ids []uint)
 	}
 
 	for file, content := range dirsMap {
-		err = writeData(zipWriter, file, content)
+		err = core.WriteFileInZip(zipWriter, file, content)
 		if err != nil {
 			return err
 		}
 	}
 
-	return writeFile(zipWriter, PortfolioFileName, ed)
+	return core.WriteJsonInZip(zipWriter, PortfolioFileName, ed)
 }
 
 //=============================================================================
@@ -189,30 +189,6 @@ func extractZipInMemory(zipData []byte) (map[string][]byte, error) {
 	}
 
 	return extractedFiles, nil
-}
-
-//=============================================================================
-
-func writeFile(zipWriter *zip.Writer, filename string, object any) error {
-	data,err := json.MarshalIndent(object, "", "\t")
-	if err != nil {
-		return err
-	}
-
-	return writeData(zipWriter, filename, data)
-}
-
-//=============================================================================
-
-func writeData(zipWriter *zip.Writer, filename string, data []byte) error {
-	writer, err := zipWriter.Create(filename)
-	if err != nil {
-		return err
-	}
-
-	buffer := bytes.NewBuffer(data)
-	_, err = io.Copy(writer, buffer)
-	return err
 }
 
 //=============================================================================

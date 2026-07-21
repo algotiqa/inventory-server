@@ -11,6 +11,7 @@
 package db
 
 import (
+	"strconv"
 	"time"
 
 	"github.com/algotiqa/types"
@@ -189,14 +190,31 @@ type TradingSystemFull struct {
 
 //=============================================================================
 
+const (
+	HostTypeWindows = "windows"
+	HostTypeLinux   = "linux"
+)
+
+//-----------------------------------------------------------------------------
+
 type AgentProfile struct {
 	Common
-	Username     string `json:"username"`
-	Name         string `json:"name"`
-	RemoteUrl    string `json:"remoteUrl"`
-	SslKeyRef    string `json:"sslKeyRef"`
-	SslCertRef   string `json:"sslCertRef"`
-	ScanInterval int    `json:"scanInterval"`
+	Username      string `json:"username"`
+	Name          string `json:"name"`
+	Host          string `json:"host"`
+	Port          int    `json:"port"`
+	ScanInterval  int    `json:"scanInterval"`
+	ScanFolder    string `json:"scanFolder"`
+	FileExtension string `json:"fileExtension"`
+	HostType      string `json:"hostType"`
+	SslKey        []byte `json:"sslKey"`
+	SslCert       []byte `json:"sslCert"`
+}
+
+//-----------------------------------------------------------------------------
+
+func (ap *AgentProfile) RemoteUrl() string {
+	return "https://" + ap.Host + ":" + strconv.Itoa(ap.Port)
 }
 
 //=============================================================================

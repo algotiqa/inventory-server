@@ -129,6 +129,33 @@ type ConnectionExt struct {
 }
 
 //=============================================================================
+//===
+//=== AgentProfile
+//===
+//=============================================================================
+
+type AgentProfileSpec struct {
+	Name          string `json:"name"`
+	Host          string `json:"host"`
+	Port          int    `json:"port"`
+	ScanInterval  int    `json:"scanInterval"`
+	ScanFolder    string `json:"scanFolder"`
+	FileExtension string `json:"fileExtension"`
+	HostType      string `json:"hostType"`
+}
+
+//=============================================================================
+
+type AgentProfileExt struct {
+	db.AgentProfile
+	TradingSystems *[]db.TradingSystemFull `json:"tradingSystems"`
+}
+
+//=============================================================================
+//===
+//=== Other
+//===
+//=============================================================================
 
 const (
 	DeleteStatusOk             = "ok"

@@ -219,7 +219,7 @@ func ReloadTradesFromAgent(tx *gorm.DB, c *auth.Context, id uint) (*TradingSyste
 	}
 
 	var ap *db.AgentProfile
-	ap, err = getAgentProfile(tx, c, *ts.AgentProfileId)
+	ap, err = getAgentProfile(tx, c, *ts.AgentProfileId, "ReloadTradesFromAgent")
 	if err != nil {
 		return nil, err
 	}
@@ -414,30 +414,8 @@ func sendChangeMessage(tx *gorm.DB, c *auth.Context, ts *db.TradingSystem, msgTy
 
 //=============================================================================
 
-func getAgentProfile(tx *gorm.DB, c *auth.Context, id uint) (*db.AgentProfile, error) {
-	ap, err := db.GetAgentProfileById(tx, id)
-	if err != nil {
-		c.Log.Error("getAgentProfile: Could not retrieve agent profile", "error", err.Error())
-		return nil, req.NewServerErrorByError(err)
-	}
-
-	if ap == nil {
-		c.Log.Error("getAgentProfile: Agent profile was not found", "id", id)
-		return nil, req.NewNotFoundError("Agent profile was not found: %v", id)
-	}
-
-	if ap.Username != c.Session.Username {
-		c.Log.Error("getAgentProfile: Agent profile not owned by user", "id", id)
-		return nil, req.NewForbiddenError("Agent profile is not owned by user: %v", id)
-	}
-
-	return ap, nil
-}
-
-//=============================================================================
-
 func callAgentToReloadSystem(c *auth.Context, ap *db.AgentProfile, ts *db.TradingSystem) (*agentscanner.TradingSystem, error) {
-	client := agentscanner.CreateClient(ap.SslCertRef, ap.SslKeyRef, "ca.crt")
+	client := agentscanner.CreateClient(ap.SslCert, ap.SslKey)
 	if client == nil {
 		return nil, req.NewServerError("Cannot create client for agent: %v", ap.Id)
 	}
@@ -446,7 +424,7 @@ func callAgentToReloadSystem(c *auth.Context, ap *db.AgentProfile, ts *db.Tradin
 	params := &TradingSystemRequest{
 		Name: ts.ExternalRef,
 	}
-	err := req.DoPost(client, ap.RemoteUrl+agentscanner.UrlTradingSystems, params, &ats, "")
+	err := req.DoPost(client, ap.RemoteUrl()+agentscanner.UrlTradingSystems, params, &ats, "")
 	if err != nil {
 		c.Log.Error("ReloadTradingSystem: Agent raised an error", "id", ap.Id, "error", err.Error())
 		return nil, req.NewServiceUnavailableError("Agent raised an error : " + err.Error())

@@ -224,10 +224,15 @@ func findAgentProfile(tx *gorm.DB, username string, apIdInPackage *uint, planRef
 				ap,ok := added[*apIdInPackage]
 				if !ok {
 					ap = &db.AgentProfile{
-						Username    : username,
-						Name        : ovRef.Name,
-						RemoteUrl   : "unknown",
-						ScanInterval: 0,
+						Username     : username,
+						Name         : ovRef.Name,
+						Host         : "unknown",
+						Port         : 8443,
+						ScanInterval : 0,
+						ScanFolder   : "/",
+						FileExtension: ".trl",
+						SslKey       : []byte{},
+						SslCert      : []byte{},
 					}
 
 					err := db.AddAgentProfile(tx,ap)

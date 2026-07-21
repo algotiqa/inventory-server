@@ -54,8 +54,14 @@ func Init(router *gin.Engine, cfg *app.Config, logger *slog.Logger) {
 	router.POST  ("/api/inventory/v1/trading-systems/import/execute",    ctrl.Secure(executeImportPlan,     roles.Admin_User_Service))
 
 	router.GET   ("/api/inventory/v1/trading-sessions",                  ctrl.Secure(getTradingSessions, roles.Admin_User_Service))
-	router.GET   ("/api/inventory/v1/agent-profiles",                    ctrl.Secure(getAgentProfiles,   roles.Admin_User_Service))
-	router.GET   ("/api/inventory/v1/agent-profiles/:id/external-refs",  ctrl.Secure(getExternalRefs,    roles.Admin_User_Service))
+
+	router.GET   ("/api/inventory/v1/agent-profiles",                    ctrl.Secure(getAgentProfiles,    roles.Admin_User_Service))
+	router.POST  ("/api/inventory/v1/agent-profiles",                    ctrl.Secure(addAgentProfile,     roles.Admin_User_Service))
+	router.GET   ("/api/inventory/v1/agent-profiles/:id",                ctrl.Secure(getAgentProfileById, roles.Admin_User_Service))
+	router.PUT   ("/api/inventory/v1/agent-profiles/:id",                ctrl.Secure(updateAgentProfile,  roles.Admin_User_Service))
+	router.DELETE("/api/inventory/v1/agent-profiles/:id",                ctrl.Secure(deleteAgentProfile,  roles.Admin_User_Service))
+	router.GET   ("/api/inventory/v1/agent-profiles/:id/external-refs",  ctrl.Secure(getExternalRefs,     roles.Admin_User_Service))
+	router.GET   ("/api/inventory/v1/agent-profiles/:id/package",        ctrl.Secure(getAgentPackage,     roles.Admin_User_Service))
 
 	//--- Administration
 

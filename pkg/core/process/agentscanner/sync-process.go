@@ -16,7 +16,6 @@ import (
 	"fmt"
 	"log/slog"
 	"net/http"
-	"os"
 	"slices"
 	"strings"
 	"time"
@@ -115,14 +114,14 @@ func runAgent(ap *db.AgentProfile) {
 //=============================================================================
 
 func collectFromAgent(ap *db.AgentProfile) {
-	client := CreateClient(ap.SslCertRef, ap.SslKeyRef, "ca.crt")
+	client := CreateClient(ap.SslCert, ap.SslKey)
 	if client == nil {
 		return
 	}
 
 	var names []string
 
-	err := req.DoGet(client, ap.RemoteUrl + UrlTradingSystems, &names, "")
+	err := req.DoGet(client, ap.RemoteUrl() + UrlTradingSystems, &names, "")
 	if err != nil {
 		slog.Error("Cannot connect to agent", "error", err.Error())
 		return
@@ -134,7 +133,7 @@ func collectFromAgent(ap *db.AgentProfile) {
 
 	for _, name := range names {
 		rq := &TradingSystemRequest{ name }
-		err = req.DoPost(client, ap.RemoteUrl + UrlTradingSystems, &rq, &ts, "")
+		err = req.DoPost(client, ap.RemoteUrl() + UrlTradingSystems, &rq, &ts, "")
 		if err != nil {
 			slog.Error("Cannot connect to agent", "error", err.Error(), "system", name)
 			continue
@@ -148,30 +147,22 @@ func collectFromAgent(ap *db.AgentProfile) {
 
 //=============================================================================
 
-func CreateClient(agentCert string, agentKey string, caCert string) *http.Client {
-	path := "certificate/"
-
-	cert, err := os.ReadFile(path + caCert)
+func CreateClient(agentCert []byte, agentKey []byte) *http.Client {
+	certificate, err := tls.X509KeyPair(agentCert, agentKey)
 	if err != nil {
-		slog.Error("Cannot read agent CA certificate: ", "path", path+caCert)
+		slog.Error("Invalid certificate/private key for agent")
 		return nil
 	}
 
 	caCertPool := x509.NewCertPool()
-	caCertPool.AppendCertsFromPEM(cert)
-
-	certificate, err := tls.LoadX509KeyPair(path+agentCert, path+agentKey)
-	if err != nil {
-		slog.Error("Cannot read agent certificate/private key: ", "certificate", path+agentCert, "key", path+agentKey)
-		return nil
-	}
+	caCertPool.AppendCertsFromPEM(agentCert)
 
 	return &http.Client{
 		Timeout: time.Minute * 3,
 		Transport: &http.Transport{
 			TLSClientConfig: &tls.Config{
-				RootCAs:      caCertPool,
 				Certificates: []tls.Certificate{certificate},
+				RootCAs     : caCertPool,
 			},
 		},
 	}

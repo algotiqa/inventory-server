@@ -51,3 +51,15 @@ func AddAgentProfile(tx *gorm.DB, ap *AgentProfile) error {
 }
 
 //=============================================================================
+
+func UpdateAgentProfile(tx *gorm.DB, ap *AgentProfile) error {
+	return tx.Save(ap).Error
+}
+
+//=============================================================================
+
+func DeleteAgentProfile(tx *gorm.DB, id uint) error {
+	return tx.Delete(&AgentProfile{}, id).Error
+}
+
+//=============================================================================

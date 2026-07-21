@@ -39,6 +39,93 @@ func getAgentProfiles(c *auth.Context) {
 
 //=============================================================================
 
+func getAgentProfileById(c *auth.Context) {
+	id, err := c.GetIdFromUrl()
+
+	if err == nil {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+			ap, errx := business.GetAgentProfileById(tx, c, id)
+
+			if errx != nil {
+				return errx
+			}
+
+			return c.ReturnObject(&ap)
+		})
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func addAgentProfile(c *auth.Context) {
+	var aps business.AgentProfileSpec
+	err := c.BindParamsFromBody(&aps)
+
+	if err == nil {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+			ts, errx := business.AddAgentProfile(tx, c, &aps)
+
+			if errx != nil {
+				return errx
+			}
+
+			return c.ReturnObject(ts)
+		})
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func updateAgentProfile(c *auth.Context) {
+	var aps business.AgentProfileSpec
+	err := c.BindParamsFromBody(&aps)
+
+	if err == nil {
+		var id uint
+		id, err = c.GetIdFromUrl()
+
+		if err == nil {
+			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+				ts, errx := business.UpdateAgentProfile(tx, c, id, &aps)
+
+				if errx != nil {
+					return errx
+				}
+
+				return c.ReturnObject(ts)
+			})
+		}
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func deleteAgentProfile(c *auth.Context) {
+	id, err := c.GetIdFromUrl()
+
+	if err == nil {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+			ts, errx := business.DeleteAgentProfile(tx, c, id)
+
+			if errx != nil {
+				return errx
+			}
+
+			return c.ReturnObject(ts)
+		})
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
 func getExternalRefs(c *auth.Context) {
 	id, err := c.GetIdFromUrl()
 
@@ -52,6 +139,23 @@ func getExternalRefs(c *auth.Context) {
 			return c.ReturnObject(res)
 		})
 	}
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func getAgentPackage(c *auth.Context) {
+	id,err := c.GetIdFromUrl()
+	if err == nil {
+		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+			res, errx := business.GetAgentPackage(tx, c, id)
+			if errx == nil {
+				_=c.ReturnData("application/zip", res)
+			}
+			return errx
+		})
+	}
+
 	c.ReturnError(err)
 }
 
