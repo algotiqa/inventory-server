@@ -20,11 +20,11 @@ messaging:
   username: admin
   password: admin
   journal:
-    directory      : .
+    directory      : journal
     queueSize      : 1000
     compactMessages: 1000
     dbSpoolInterval: 2
 provider:
   currency:
     baseUrl: https://api.freecurrencyapi.com/v1
-    apiKey : fca_live_PEgz9oUDbBGePkYR5UtVnhAU739eVYptqKvC9mTd
+    apiKey : xyz
