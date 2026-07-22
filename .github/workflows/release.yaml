@@ -2,10 +2,7 @@ name: Release pipeline
 
 on:
   push:
-    branches: [ "main" ]
     tags: [ 'v*.*.*' ]
-  pull_request:
-    branches: [ "main" ]
 
 permissions:
   contents: write  # Required to create GitHub Releases and upload binaries
@@ -21,7 +18,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0 # Needed by GoReleaser to generate changelogs
 
@@ -48,7 +45,6 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Log in to GitHub Container Registry
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ${{ env.REGISTRY }}
@@ -70,7 +66,7 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           context: .
-          push: ${{ github.event_name != 'pull_request' }}
+          push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
           cache-from: type=gha
