@@ -32,7 +32,7 @@ var   version   = "dev"
 func main() {
 	cfg := &app.Config{}
 	boot.ReadConfig(component, cfg)
-	logger := boot.InitLogger(component, &cfg.Application)
+	logger := boot.InitLogger(component, version, &cfg.Application)
 	engine := boot.InitEngine(logger, &cfg.Application)
 	initClients()
 	dbms.InitDatabase(&cfg.Database)
