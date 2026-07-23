@@ -34,7 +34,7 @@ var apiKey string
 
 func Init(cfg *app.Config) {
 	baseUrl = cfg.Provider.Currency.BaseUrl
-	apiKey = cfg.Provider.Currency.ApiKey
+	apiKey  = cfg.Provider.Currency.ApiKey
 
 	ticker := time.NewTicker(45 * time.Minute)
 

@@ -53,9 +53,9 @@ func NewFreeCurrencyClient(baseUrl, apiKey string) *FreeCurrencyClient {
 
 func (f *FreeCurrencyClient) GetHistoricalValues(date types.Date, baseCurrency, currencyList string) (*HistoricalResponse, error) {
 	params := map[string]string{}
-	params["date"] = date.String()
+	params["date"]          = date.String()
 	params["base_currency"] = baseCurrency
-	params["currencies"] = currencyList
+	params["currencies"]    = currencyList
 
 	res, err := f.callAPI(Historical, params)
 	if err != nil {

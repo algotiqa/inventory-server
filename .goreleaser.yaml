@@ -3,7 +3,7 @@ version: 2
 before:
   hooks:
     - go mod tidy
-    - 
+    -
 
 builds:
   - env:
@@ -27,6 +27,7 @@ archives:
         formats: [ "zip" ]
     name_template: "{{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
     files:
+      - agent/**
       - config/inventory-server.yaml
       - journal/.gitignore
       - log/.gitignore

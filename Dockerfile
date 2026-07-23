@@ -24,6 +24,7 @@ WORKDIR /
 
 # Copy binary from builder
 COPY --from=builder /app/server /server
+COPY agent /
 
 # Use a non-root user for security
 USER nonroot:nonroot

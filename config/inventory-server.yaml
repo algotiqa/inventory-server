@@ -10,7 +10,7 @@ database:
 authentication:
   authority   : https://algotiqa-server:8443/auth/realms/algotiqa
   clientId    : algotiqa-backend
-  clientSecret: xyz
+  clientSecret: NOT_NEEDED
 platform:
   system   : https://algotiqa-server:8449/api/system
   portfolio: https://algotiqa-server:8445/api/portfolio
@@ -27,4 +27,4 @@ messaging:
 provider:
   currency:
     baseUrl: https://api.freecurrencyapi.com/v1
-    apiKey : fca_live_PEgz9oUDbBGePkYR5UtVnhAU739eVYptqKvC9mTd
+    apiKey : PUT_YOUR_KEY_HERE
