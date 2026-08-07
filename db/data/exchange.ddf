@@ -1,0 +1,27 @@
+#---------------------------------------------------------
+#--- File exported in DDF format on 2026-03-14 19:25:26
+#---
+#--- SELECT id,currency_id,code,name,timezone,url FROM inventory.exchange
+#---------------------------------------------------------
+
+[INFO]
+version=3
+table=exchange
+schema=inventory
+
+[FIELDS]
+id,            INTEGER,    K
+currency_id,   INTEGER,    N
+code,          VARCHAR,    N
+name,          VARCHAR,    N
+timezone,      VARCHAR,    N
+url,           VARCHAR,    N
+
+[INSERT]
+1	1	CME	Chicago Mercantile Exchange	America/Chicago	https://www.cmegroup.com/
+2	1	NYMEX	New York Mercantile Exchange	America/New_York	https://www.cmegroup.com/
+3	1	COMEX	New York Mercantile Exchange - COMEX Division	America/New_York	https://www.cmegroup.com/
+4	1	CBOT	Chicago Board of Trade	America/Chicago	https://www.cmegroup.com/
+5	1	CBOE	CBOE Global Markets Inc.	America/Chicago	https://www.cboe.com/
+6	2	EUREX	European Exchange	Europe/Rome	https://www.eurex.com/
+7	1	ICEUS	ICE Futures U.S.	America/New_York	https://www.ice.com/futures-us/
