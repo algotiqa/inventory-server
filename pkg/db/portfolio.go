@@ -1,12 +1,11 @@
 //=============================================================================
 //===
-//=== Copyright (C) 2023-present Andrea Carboni
+//=== Copyright (C) 2026-present Andrea Carboni
 //===
 //=== This source code is licensed under the Elastic License 2.0 (ELv2) available at:
 //=== https://github.com/algotiqa/docs/blob/main/LICENSE.md
 //=== By using this file, you agree to the terms and conditions of that license.
 //=============================================================================
-
 
 package db
 
@@ -17,9 +16,9 @@ import (
 
 //=============================================================================
 
-func GetCurrencies(tx *gorm.DB) (*[]Currency, error) {
-	var list []Currency
-	res := tx.Find(&list).Order("code")
+func GetPortfolios(tx *gorm.DB, filter map[string]any, offset int, limit int) (*[]PortfolioFull, error) {
+	var list []PortfolioFull
+	res := tx.Where(filter).Offset(offset).Limit(limit).Find(&list)
 
 	if res.Error != nil {
 		return nil, req.NewServerErrorByError(res.Error)
@@ -30,8 +29,25 @@ func GetCurrencies(tx *gorm.DB) (*[]Currency, error) {
 
 //=============================================================================
 
-func GetCurrencyById(tx *gorm.DB, id uint) (*Currency, error) {
-	var list []Currency
+func GetPortfoliosFull(tx *gorm.DB, filter map[string]any, offset int, limit int) (*[]PortfolioFull, error) {
+	var list []PortfolioFull
+	res := tx.Model(&Portfolio{}).Select("portfolio.*, " +
+		"currency.code as currency_code, account.code as account_code, account.name as account_name").
+		Joins("LEFT JOIN account  ON portfolio.account_id = account.id").
+		Joins("LEFT JOIN currency ON account.currency_id  = currency.id").
+		Where(filter).Offset(offset).Limit(limit).Find(&list)
+
+	if res.Error != nil {
+		return nil, req.NewServerErrorByError(res.Error)
+	}
+
+	return &list, nil
+}
+
+//=============================================================================
+
+func GetPortfolioById(tx *gorm.DB, id uint) (*Portfolio, error) {
+	var list []Portfolio
 	res := tx.Find(&list, id)
 
 	if res.Error != nil {
@@ -47,47 +63,20 @@ func GetCurrencyById(tx *gorm.DB, id uint) (*Currency, error) {
 
 //=============================================================================
 
-func GetCurrencyByCode(tx *gorm.DB, code string) (*Currency, error) {
-	var list []Currency
-	res := tx.Find(&list, "code = ?", code)
-
-	if res.Error != nil {
-		return nil, req.NewServerErrorByError(res.Error)
-	}
-
-	if len(list) == 1 {
-		return &list[0], nil
-	}
-
-	return nil, nil
+func AddPortfolio(tx *gorm.DB, p *Portfolio) error {
+	return tx.Create(p).Error
 }
 
 //=============================================================================
 
-func GetCurrenciesAsMap(tx *gorm.DB) (map[uint]*Currency, error) {
-	list,err := GetCurrencies(tx)
-	if err != nil {
-		return nil, err
-	}
-
-	result := make(map[uint]*Currency)
-	for _,c := range *list {
-		result[c.Id] = &c
-	}
-
-	return result,nil
+func UpdatePortfolio(tx *gorm.DB, p *Portfolio) error {
+	return tx.Save(p).Error
 }
 
 //=============================================================================
 
-func UpdateCurrency(tx *gorm.DB, c *Currency) error {
-	return tx.Save(c).Error
-}
-
-//=============================================================================
-
-func AddCurrencyHistory(tx *gorm.DB, ci *CurrencyHistory) error {
-	return tx.Create(ci).Error
+func DeletePortfolio(tx *gorm.DB, id uint) error {
+	return tx.Delete(&Portfolio{}, id).Error
 }
 
 //=============================================================================

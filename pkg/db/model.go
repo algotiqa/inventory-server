@@ -7,7 +7,6 @@
 //=== By using this file, you agree to the terms and conditions of that license.
 //=============================================================================
 
-
 package db
 
 import (
@@ -73,6 +72,7 @@ type Connection struct {
 	SupportsBroker       bool   `json:"supportsBroker"`
 	SupportsMultipleData bool   `json:"supportsMultipleData"`
 	SupportsInventory    bool   `json:"supportsInventory"`
+	SupportsAccount      bool   `json:"supportsAccount"`
 }
 
 //=============================================================================
@@ -166,6 +166,7 @@ type TradingSystem struct {
 	DataProductId    uint       `json:"dataProductId"`
 	BrokerProductId  uint       `json:"brokerProductId"`
 	TradingSessionId uint       `json:"tradingSessionId"`
+	PortfolioId      *uint      `json:"portfolioId"`
 	AgentProfileId   *uint      `json:"agentProfileId"`
 	Name             string     `json:"name"`
 	Timeframe        int        `json:"timeframe"`
@@ -190,6 +191,8 @@ type TradingSystemFull struct {
 
 //=============================================================================
 
+type HostType string
+
 const (
 	HostTypeWindows = "windows"
 	HostTypeLinux   = "linux"
@@ -199,22 +202,76 @@ const (
 
 type AgentProfile struct {
 	Common
-	Username      string `json:"username"`
-	Name          string `json:"name"`
-	Host          string `json:"host"`
-	Port          int    `json:"port"`
-	ScanInterval  int    `json:"scanInterval"`
-	ScanFolder    string `json:"scanFolder"`
-	FileExtension string `json:"fileExtension"`
-	HostType      string `json:"hostType"`
-	SslKey        []byte `json:"sslKey"`
-	SslCert       []byte `json:"sslCert"`
+	Username      string   `json:"username"`
+	Name          string   `json:"name"`
+	Host          string   `json:"host"`
+	Port          int      `json:"port"`
+	ScanInterval  int      `json:"scanInterval"`
+	ScanFolder    string   `json:"scanFolder"`
+	FileExtension string   `json:"fileExtension"`
+	HostType      HostType `json:"hostType"`
+	SslKey        []byte   `json:"sslKey"`
+	SslCert       []byte   `json:"sslCert"`
 }
 
 //-----------------------------------------------------------------------------
 
-func (ap *AgentProfile) RemoteUrl() string {
+func (ap AgentProfile) RemoteUrl() string {
 	return "https://" + ap.Host + ":" + strconv.Itoa(ap.Port)
+}
+
+//=============================================================================
+
+type Account struct {
+	Common
+	Username        string  `json:"username"`
+	ConnectionId    uint    `json:"connectionId"`
+	CurrencyId      uint    `json:"currencyId"`
+	Code            string  `json:"code"`
+	Name            string  `json:"name"`
+	CurrentCapital  float64 `json:"currentCapital"`
+	SupportsAccount bool    `json:"supportsAccount"`
+	StatusMessage   string  `json:"statusMessage"`
+}
+
+//=============================================================================
+
+type AccountFull struct {
+	Account
+	ConnectionCode string `json:"connectionCode,omitempty"`
+	ConnectionName string `json:"connectionName,omitempty"`
+	SystemCode     string `json:"systemCode,omitempty"`
+	CurrencyCode   string `json:"currencyCode,omitempty"`
+}
+
+//=============================================================================
+
+type ManagementType string
+
+const (
+	ManagementTypeManual ManagementType = "M"
+	ManagementTypeAuto   ManagementType = "A"
+)
+
+//-----------------------------------------------------------------------------
+
+type Portfolio struct {
+	Common
+	Username       string         `json:"username"`
+	AccountId      uint           `json:"accountId"`
+	Name           string         `json:"name"`
+	Management     ManagementType `json:"management"`
+	AccountPerc    float64        `json:"accountPerc"`
+	MaxMarginPerc  float64        `json:"maxMarginPerc"`
+}
+
+//=============================================================================
+
+type PortfolioFull struct {
+	Portfolio
+	AccountCode  string  `json:"accountCode,omitempty"`
+	AccountName  string  `json:"accountName,omitempty"`
+	CurrencyCode string  `json:"currencyCode,omitempty"`
 }
 
 //=============================================================================
@@ -233,5 +290,7 @@ func (BrokerProduct)    TableName() string { return "broker_product"    }
 func (BrokerInstrument) TableName() string { return "broker_instrument" }
 func (TradingSession)   TableName() string { return "trading_session"   }
 func (TradingSystem)    TableName() string { return "trading_system"    }
+func (Account)          TableName() string { return "account"           }
+func (Portfolio)        TableName() string { return "portfolio"         }
 
 //=============================================================================

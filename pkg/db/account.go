@@ -1,12 +1,11 @@
 //=============================================================================
 //===
-//=== Copyright (C) 2023-present Andrea Carboni
+//=== Copyright (C) 2026-present Andrea Carboni
 //===
 //=== This source code is licensed under the Elastic License 2.0 (ELv2) available at:
 //=== https://github.com/algotiqa/docs/blob/main/LICENSE.md
 //=== By using this file, you agree to the terms and conditions of that license.
 //=============================================================================
-
 
 package db
 
@@ -17,9 +16,9 @@ import (
 
 //=============================================================================
 
-func GetCurrencies(tx *gorm.DB) (*[]Currency, error) {
-	var list []Currency
-	res := tx.Find(&list).Order("code")
+func GetAccounts(tx *gorm.DB, filter map[string]any, offset int, limit int) (*[]AccountFull, error) {
+	var list []AccountFull
+	res := tx.Where(filter).Offset(offset).Limit(limit).Find(&list)
 
 	if res.Error != nil {
 		return nil, req.NewServerErrorByError(res.Error)
@@ -30,8 +29,26 @@ func GetCurrencies(tx *gorm.DB) (*[]Currency, error) {
 
 //=============================================================================
 
-func GetCurrencyById(tx *gorm.DB, id uint) (*Currency, error) {
-	var list []Currency
+func GetAccountsFull(tx *gorm.DB, filter map[string]any, offset int, limit int) (*[]AccountFull, error) {
+	var list []AccountFull
+	res := tx.Model(&Account{}).Select("account.*, " +
+		"currency.code as currency_code, " +
+		"connection.code as connection_code, connection.name as connection_name, connection.system_code as system_code").
+		Joins("LEFT JOIN connection ON account.connection_id = connection.id").
+		Joins("LEFT JOIN currency   ON account.currency_id   = currency.id").
+		Where(filter).Offset(offset).Limit(limit).Find(&list)
+
+	if res.Error != nil {
+		return nil, req.NewServerErrorByError(res.Error)
+	}
+
+	return &list, nil
+}
+
+//=============================================================================
+
+func GetAccountById(tx *gorm.DB, id uint) (*Account, error) {
+	var list []Account
 	res := tx.Find(&list, id)
 
 	if res.Error != nil {
@@ -47,47 +64,20 @@ func GetCurrencyById(tx *gorm.DB, id uint) (*Currency, error) {
 
 //=============================================================================
 
-func GetCurrencyByCode(tx *gorm.DB, code string) (*Currency, error) {
-	var list []Currency
-	res := tx.Find(&list, "code = ?", code)
-
-	if res.Error != nil {
-		return nil, req.NewServerErrorByError(res.Error)
-	}
-
-	if len(list) == 1 {
-		return &list[0], nil
-	}
-
-	return nil, nil
+func AddAccount(tx *gorm.DB, a *Account) error {
+	return tx.Create(a).Error
 }
 
 //=============================================================================
 
-func GetCurrenciesAsMap(tx *gorm.DB) (map[uint]*Currency, error) {
-	list,err := GetCurrencies(tx)
-	if err != nil {
-		return nil, err
-	}
-
-	result := make(map[uint]*Currency)
-	for _,c := range *list {
-		result[c.Id] = &c
-	}
-
-	return result,nil
+func UpdateAccount(tx *gorm.DB, a *Account) error {
+	return tx.Save(a).Error
 }
 
 //=============================================================================
 
-func UpdateCurrency(tx *gorm.DB, c *Currency) error {
-	return tx.Save(c).Error
-}
-
-//=============================================================================
-
-func AddCurrencyHistory(tx *gorm.DB, ci *CurrencyHistory) error {
-	return tx.Create(ci).Error
+func DeleteAccount(tx *gorm.DB, id uint) error {
+	return tx.Delete(&Account{}, id).Error
 }
 
 //=============================================================================

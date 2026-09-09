@@ -10,11 +10,16 @@
 package business
 
 import (
+	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/inventory-server/pkg/business/importexport"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"github.com/algotiqa/types"
 )
 
+//=============================================================================
+//===
+//=== Connections
+//===
 //=============================================================================
 
 type ConnectionSpec struct {
@@ -24,6 +29,13 @@ type ConnectionSpec struct {
 	SystemConfigParams string `json:"systemConfigParams"`
 }
 
+//=============================================================================
+
+type ConnectionExt struct {
+	db.Connection
+	DataProducts   []db.DataProductFull	  `json:"dataProducts"`
+	BrokerProducts []db.BrokerProductFull `json:"brokerProducts"`
+}
 //=============================================================================
 
 type TradingSystemSpec struct {
@@ -40,21 +52,6 @@ type TradingSystemSpec struct {
 	InSampleFrom     types.Date `json:"inSampleFrom"      binding:"required"`
 	InSampleTo       types.Date `json:"inSampleTo"        binding:"required"`
 	EngineCode       string     `json:"engineCode"        binding:"required"`
-}
-
-//=============================================================================
-
-type BrokerProductSpec struct {
-	ConnectionId     uint    `json:"connectionId"     binding:"required"`
-	ExchangeId       uint    `json:"exchangeId"       binding:"required"`
-	Symbol           string  `json:"symbol"           binding:"required"`
-	Name             string  `json:"name"             binding:"required"`
-	PointValue       float64 `json:"pointValue"       binding:"min=0,max=1000000"`
-	CostPerOperation float64 `json:"costPerOperation" binding:"min=0,max=10000"`
-	MarginValue      float64 `json:"marginValue"      binding:"min=0,max=1000000"`
-	Increment        float64 `json:"increment"        binding:"min=0,max=1"`
-	MarketType       string  `json:"marketType"       binding:"required"`
-	ProductType      string  `json:"productType"      binding:"required"`
 }
 
 //=============================================================================
@@ -90,6 +87,21 @@ func NewTradingSystemReloadResponse() *TradingSystemReloadResponse {
 //===
 //=============================================================================
 
+type BrokerProductSpec struct {
+	ConnectionId     uint    `json:"connectionId"     binding:"required"`
+	ExchangeId       uint    `json:"exchangeId"       binding:"required"`
+	Symbol           string  `json:"symbol"           binding:"required"`
+	Name             string  `json:"name"             binding:"required"`
+	PointValue       float64 `json:"pointValue"       binding:"min=0,max=1000000"`
+	CostPerOperation float64 `json:"costPerOperation" binding:"min=0,max=10000"`
+	MarginValue      float64 `json:"marginValue"      binding:"min=0,max=1000000"`
+	Increment        float64 `json:"increment"        binding:"min=0,max=1"`
+	MarketType       string  `json:"marketType"       binding:"required"`
+	ProductType      string  `json:"productType"      binding:"required"`
+}
+
+//=============================================================================
+
 type BrokerProductExt struct {
 	db.BrokerProduct
 	Connection     *db.Connection          `json:"connection"`
@@ -118,36 +130,80 @@ type ImportExecutionSpec struct {
 
 //=============================================================================
 //===
-//=== Connections
-//===
-//=============================================================================
-
-type ConnectionExt struct {
-	db.Connection
-	DataProducts   []db.DataProductFull	  `json:"dataProducts"`
-	BrokerProducts []db.BrokerProductFull `json:"brokerProducts"`
-}
-
-//=============================================================================
-//===
 //=== AgentProfile
 //===
 //=============================================================================
 
 type AgentProfileSpec struct {
-	Name          string `json:"name"`
-	Host          string `json:"host"`
-	Port          int    `json:"port"`
-	ScanInterval  int    `json:"scanInterval"`
-	ScanFolder    string `json:"scanFolder"`
-	FileExtension string `json:"fileExtension"`
-	HostType      string `json:"hostType"`
+	Name          string      `json:"name"`
+	Host          string      `json:"host"`
+	Port          int         `json:"port"`
+	ScanInterval  int         `json:"scanInterval"`
+	ScanFolder    string      `json:"scanFolder"`
+	FileExtension string      `json:"fileExtension"`
+	HostType      db.HostType `json:"hostType"`
 }
 
 //=============================================================================
 
 type AgentProfileExt struct {
 	db.AgentProfile
+	TradingSystems *[]db.TradingSystemFull `json:"tradingSystems"`
+}
+
+//=============================================================================
+//===
+//=== Accounts
+//===
+//=============================================================================
+
+type AccountSpec struct {
+	ConnectionId     uint    `json:"connectionId"    binding:"required"`
+	CurrencyId       uint    `json:"currencyId"      binding:"required"`
+	Code             string  `json:"code"            binding:"required"`
+	Name             string  `json:"name"            binding:"required"`
+	CurrentCapital   float64 `json:"currentCapital"  binding:"min=0,max=9999999999"`
+}
+
+//=============================================================================
+
+type AccountExt struct {
+	db.Account
+	Connection  *db.Connection      `json:"connection"`
+	Currency    *db.Currency        `json:"currency"`
+	Portfolios  *[]db.PortfolioFull `json:"portfolios"`
+}
+
+//=============================================================================
+//===
+//=== Portfolios
+//===
+//=============================================================================
+
+type PortfolioSpec struct {
+	AccountId     uint              `json:"accountId"     binding:"required"`
+	Name          string            `json:"name"          binding:"required"`
+	Management    db.ManagementType `json:"management"    binding:"required"`
+	AccountPerc   float64           `json:"accountPerc"   binding:"min=1,max=100"`
+	MaxMarginPerc float64           `json:"maxMarginPerc" binding:"min=1,max=100"`
+}
+
+//-----------------------------------------------------------------------------
+
+func (ps *PortfolioSpec) Validate() error {
+	if ps.Management != db.ManagementTypeManual && ps.Management != db.ManagementTypeAuto {
+		return req.NewBadRequestError("invalid management type: %v", ps.Management)
+	}
+
+	return nil
+}
+
+//=============================================================================
+
+type PortfolioExt struct {
+	db.Portfolio
+	Account        *db.Account             `json:"account"`
+	Currency       *db.Currency            `json:"currency"`
 	TradingSystems *[]db.TradingSystemFull `json:"tradingSystems"`
 }
 
@@ -163,6 +219,7 @@ const (
 	DeleteStatusDataProducts   = "dataProducts"
 	DeleteStatusBrokerProducts = "brokerProducts"
 	DeleteStatusTradingSystems = "tradingSystems"
+	DeleteStatusPortfolios     = "portfolios"
 )
 
 //=============================================================================

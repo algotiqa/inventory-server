@@ -7,7 +7,6 @@
 //=== By using this file, you agree to the terms and conditions of that license.
 //=============================================================================
 
-
 package platform
 
 import (
@@ -80,6 +79,25 @@ func GetSystems(c *auth.Context) (*[]System, error) {
 
 	c.Log.Info("GetSystems: Returning systems", "systems", len(*systems.l))
 	return systems.l, nil
+}
+
+//=============================================================================
+
+func GetAccounts(c *auth.Context, code string) (*[]Account, error) {
+	c.Log.Info("GetAccounts: Getting accounts from system adapter...")
+
+	var accountList AccountList
+
+	client := req.GetDefaultClient()
+	url := c.Config.(*app.Config).Platform.System + "/v1/connections/"+ code +"/accounts"
+	err := req.DoGet(client, url, &accountList, c.Token)
+
+	if err != nil {
+		c.Log.Error("GetAccounts: Got an error from system adapter ", "error", err.Error())
+		return nil,req.NewServerError("Cannot communicate with system-adapter: %v", err.Error())
+	}
+
+	return &accountList.Result,nil
 }
 
 //=============================================================================

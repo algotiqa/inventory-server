@@ -1,6 +1,6 @@
 //=============================================================================
 //===
-//=== Copyright (C) 2023-present Andrea Carboni
+//=== Copyright (C) 2026-present Andrea Carboni
 //===
 //=== This source code is licensed under the Elastic License 2.0 (ELv2) available at:
 //=== https://github.com/algotiqa/docs/blob/main/LICENSE.md
@@ -18,7 +18,7 @@ import (
 
 //=============================================================================
 
-func getBrokerProducts(c *auth.Context) {
+func getPortfolios(c *auth.Context) {
 	filter := map[string]any{}
 	offset, limit, err := c.GetPagingParams()
 
@@ -28,7 +28,7 @@ func getBrokerProducts(c *auth.Context) {
 
 		if err == nil {
 			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-				list, terr := business.GetBrokerProducts(tx, c, filter, offset, limit, details)
+				list, terr := business.GetPortfolios(tx, c, filter, offset, limit, details)
 
 				if terr != nil {
 					return terr
@@ -44,12 +44,12 @@ func getBrokerProducts(c *auth.Context) {
 
 //=============================================================================
 
-func getBrokerProductById(c *auth.Context) {
+func getPortfolioById(c *auth.Context) {
 	id, err := c.GetIdFromUrl()
 
 	if err == nil {
 		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-			pb, err := business.GetBrokerProductById(tx, c, id)
+			pb, err := business.GetPortfolioById(tx, c, id)
 
 			if err != nil {
 				return err
@@ -64,13 +64,13 @@ func getBrokerProductById(c *auth.Context) {
 
 //=============================================================================
 
-func addBrokerProduct(c *auth.Context) {
-	var pds business.BrokerProductSpec
-	err := c.BindParamsFromBody(&pds)
+func addPortfolio(c *auth.Context) {
+	var ps business.PortfolioSpec
+	err := c.BindParamsFromBody(&ps)
 
 	if err == nil {
 		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-			ts, err := business.AddBrokerProduct(tx, c, &pds)
+			ts, err := business.AddPortfolio(tx, c, &ps)
 
 			if err != nil {
 				return err
@@ -85,16 +85,16 @@ func addBrokerProduct(c *auth.Context) {
 
 //=============================================================================
 
-func updateBrokerProduct(c *auth.Context) {
-	var pds business.BrokerProductSpec
-	err := c.BindParamsFromBody(&pds)
+func updatePortfolio(c *auth.Context) {
+	var ps business.PortfolioSpec
+	err := c.BindParamsFromBody(&ps)
 
 	if err == nil {
 		id, err := c.GetIdFromUrl()
 
 		if err == nil {
 			err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-				ts, err := business.UpdateBrokerProduct(tx, c, id, &pds)
+				ts, err := business.UpdatePortfolio(tx, c, id, &ps)
 
 				if err != nil {
 					return err
@@ -110,12 +110,12 @@ func updateBrokerProduct(c *auth.Context) {
 
 //=============================================================================
 
-func deleteBrokerProduct(c *auth.Context) {
+func deletePortfolio(c *auth.Context) {
 	id, err := c.GetIdFromUrl()
 
 	if err == nil {
 		err = dbms.RunInTransaction(func(tx *gorm.DB) error {
-			ts, err := business.DeleteBrokerProduct(tx, c, id)
+			ts, err := business.DeletePortfolio(tx, c, id)
 
 			if err != nil {
 				return err

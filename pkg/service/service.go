@@ -63,6 +63,18 @@ func Init(router *gin.Engine, cfg *app.Config, logger *slog.Logger) {
 	router.GET   ("/api/inventory/v1/agent-profiles/:id/external-refs",  ctrl.Secure(getExternalRefs,     roles.Admin_User_Service))
 	router.GET   ("/api/inventory/v1/agent-profiles/:id/package",        ctrl.Secure(getAgentPackage,     roles.Admin_User_Service))
 
+	router.GET   ("/api/inventory/v1/accounts",        ctrl.Secure(getAccounts,    roles.Admin_User_Service))
+	router.POST  ("/api/inventory/v1/accounts",        ctrl.Secure(addAccount,     roles.Admin_User_Service))
+	router.GET   ("/api/inventory/v1/accounts/:id",    ctrl.Secure(getAccountById, roles.Admin_User_Service))
+	router.PUT   ("/api/inventory/v1/accounts/:id",    ctrl.Secure(updateAccount,  roles.Admin_User_Service))
+	router.DELETE("/api/inventory/v1/accounts/:id",    ctrl.Secure(deleteAccount,  roles.Admin_User_Service))
+
+	router.GET   ("/api/inventory/v1/portfolios",      ctrl.Secure(getPortfolios,    roles.Admin_User_Service))
+	router.POST  ("/api/inventory/v1/portfolios",      ctrl.Secure(addPortfolio,     roles.Admin_User_Service))
+	router.GET   ("/api/inventory/v1/portfolios/:id",  ctrl.Secure(getPortfolioById, roles.Admin_User_Service))
+	router.PUT   ("/api/inventory/v1/portfolios/:id",  ctrl.Secure(updatePortfolio,  roles.Admin_User_Service))
+	router.DELETE("/api/inventory/v1/portfolios/:id",  ctrl.Secure(deletePortfolio,  roles.Admin_User_Service))
+
 	//--- Administration
 
 	router.GET   ("/api/inventory/v1/connections",     ctrl.Secure(getConnections,    roles.Admin_User_Service))

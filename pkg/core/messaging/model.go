@@ -64,3 +64,19 @@ type AgentProfileMessage struct {
 }
 
 //=============================================================================
+
+type AccountMessage struct {
+	Account    *db.Account    `json:"account"`
+	Connection *db.Connection `json:"connection"`
+	Currency   *db.Currency   `json:"currency"`
+}
+
+//=============================================================================
+
+type PortfolioMessage struct {
+	Portfolio  *db.Portfolio `json:"portfolio"`
+	Account    *db.Account   `json:"account"`
+	Currency   *db.Currency  `json:"currency"`
+}
+
+//=============================================================================

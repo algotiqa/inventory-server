@@ -84,6 +84,7 @@ func AddConnection(tx *gorm.DB, c *auth.Context, cs *ConnectionSpec) (*db.Connec
 	conn.SupportsBroker       = sys.SupportsBroker
 	conn.SupportsMultipleData = sys.SupportsMultipleData
 	conn.SupportsInventory    = sys.SupportsInventory
+	conn.SupportsAccount      = sys.SupportsAccount
 	conn.Connected            = conn.SupportsMultipleData
 
 	err = db.AddConnection(tx, &conn)
