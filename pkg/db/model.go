@@ -175,7 +175,6 @@ type TradingSystem struct {
 	DataProductId    uint       `json:"dataProductId"`
 	BrokerProductId  uint       `json:"brokerProductId"`
 	TradingSessionId uint       `json:"tradingSessionId"`
-	PortfolioId      *uint      `json:"portfolioId"`
 	AgentProfileId   *uint      `json:"agentProfileId"`
 	Name             string     `json:"name"`
 	Timeframe        int        `json:"timeframe"`
@@ -281,22 +280,6 @@ type PortfolioFull struct {
 	AccountCode  string  `json:"accountCode,omitempty"`
 	AccountName  string  `json:"accountName,omitempty"`
 	CurrencyCode string  `json:"currencyCode,omitempty"`
-}
-
-//=============================================================================
-
-type TradingSystemAssignable struct {
-	Id             uint       `json:"id"`
-	Name           string     `json:"name"`
-	Timeframe      int        `json:"timeframe"`
-	StrategyType   string     `json:"strategyType"`
-	DataSymbol     string     `json:"dataSymbol"`
-	BrokerSymbol   string     `json:"brokerSymbol"`
-	PortfolioName  string     `json:"portfolioName"`
-	AccountCode    string     `json:"accountCode"`
-	AccountName    string     `json:"accountName"`
-	ConnectionCode string     `json:"connectionCode"`
-	EngineCode     EngineCode `json:"engineCode"`
 }
 
 //=============================================================================
