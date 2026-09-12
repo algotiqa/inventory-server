@@ -39,19 +39,19 @@ type ConnectionExt struct {
 //=============================================================================
 
 type TradingSystemSpec struct {
-	DataProductId    uint       `json:"dataProductId"     binding:"required"`
-	BrokerProductId  uint       `json:"brokerProductId"   binding:"required"`
-	TradingSessionId uint       `json:"tradingSessionId"  binding:"required"`
-	AgentProfileId   *uint      `json:"agentProfileId"`
-	Name             string     `json:"name"              binding:"required"`
-	Timeframe        int        `json:"timeframe"         binding:"min=1,max=1440"`
-	StrategyType     string     `json:"strategyType"      binding:"required"`
-	Overnight        bool       `json:"overnight"`
-	Tags             string     `json:"tags"`
-	ExternalRef      string     `json:"externalRef"`
-	InSampleFrom     types.Date `json:"inSampleFrom"      binding:"required"`
-	InSampleTo       types.Date `json:"inSampleTo"        binding:"required"`
-	EngineCode       string     `json:"engineCode"        binding:"required"`
+	DataProductId    uint          `json:"dataProductId"     binding:"required"`
+	BrokerProductId  uint          `json:"brokerProductId"   binding:"required"`
+	TradingSessionId uint          `json:"tradingSessionId"  binding:"required"`
+	AgentProfileId   *uint         `json:"agentProfileId"`
+	Name             string        `json:"name"              binding:"required"`
+	Timeframe        int           `json:"timeframe"         binding:"min=1,max=1440"`
+	StrategyType     string        `json:"strategyType"      binding:"required"`
+	Overnight        bool          `json:"overnight"`
+	Tags             string        `json:"tags"`
+	ExternalRef      string        `json:"externalRef"`
+	InSampleFrom     types.Date    `json:"inSampleFrom"      binding:"required"`
+	InSampleTo       types.Date    `json:"inSampleTo"        binding:"required"`
+	EngineCode       db.EngineCode `json:"engineCode"        binding:"required"`
 }
 
 //=============================================================================

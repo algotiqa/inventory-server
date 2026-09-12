@@ -112,21 +112,21 @@ type AgentProfile struct {
 //=============================================================================
 
 type TradingSystem struct {
-	Id               uint       `json:"id"`
-	DataProductId    uint       `json:"dataProductId"`
-	BrokerProductId  uint       `json:"brokerProductId"`
-	TradingSessionId uint       `json:"tradingSessionId"`
-	AgentProfileId   *uint      `json:"agentProfileId"`
-	Name             string     `json:"name"`
-	Timeframe        int        `json:"timeframe"`
-	StrategyType     string     `json:"strategyType"`
-	Overnight        bool       `json:"overnight"`
-	Tags             string     `json:"tags"`
-	ExternalRef      string     `json:"externalRef"`
-	Finalized        bool       `json:"finalized"`
-	InSampleFrom     types.Date `json:"inSampleFrom"`
-	InSampleTo       types.Date `json:"inSampleTo"`
-	EngineCode       string     `json:"engineCode"`
+	Id               uint          `json:"id"`
+	DataProductId    uint          `json:"dataProductId"`
+	BrokerProductId  uint          `json:"brokerProductId"`
+	TradingSessionId uint          `json:"tradingSessionId"`
+	AgentProfileId   *uint         `json:"agentProfileId"`
+	Name             string        `json:"name"`
+	Timeframe        int           `json:"timeframe"`
+	StrategyType     string        `json:"strategyType"`
+	Overnight        bool          `json:"overnight"`
+	Tags             string        `json:"tags"`
+	ExternalRef      string        `json:"externalRef"`
+	Finalized        bool          `json:"finalized"`
+	InSampleFrom     types.Date    `json:"inSampleFrom"`
+	InSampleTo       types.Date    `json:"inSampleTo"`
+	EngineCode       db.EngineCode `json:"engineCode"`
 
 	portfolioData    []byte
 	storageData      []byte
