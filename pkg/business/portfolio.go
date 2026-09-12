@@ -129,11 +129,26 @@ func UpdatePortfolio(tx *gorm.DB, c *auth.Context, id uint, ps *PortfolioSpec) (
 		return nil, err
 	}
 
+	if p.Management != ps.Management {
+		filter := map[string]any{}
+		filter["portfolio_id"] = id
+
+		tss,errs := db.GetTradingSystems(tx, filter, 0, 5000)
+		if errs != nil {
+			return nil, errs
+		}
+		if len(*tss) > 0 {
+			return nil, req.NewForbiddenError("Cannot change the management of a portfolio if there are trading systems attached")
+		}
+	}
+
 	p.Name          = ps.Name
-	p.AccountId     = ps.AccountId
 	p.Management    = ps.Management
 	p.AccountPerc   = ps.AccountPerc
 	p.MaxMarginPerc = ps.MaxMarginPerc
+
+	//--- Parent account cannot be changed
+	//p.AccountId = ps.AccountId
 
 	err = db.UpdatePortfolio(tx, p)
 	if err != nil {
