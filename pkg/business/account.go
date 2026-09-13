@@ -92,13 +92,13 @@ func AddAccount(tx *gorm.DB, c *auth.Context, as *AccountSpec) (*db.Account, err
 	}
 
 	var a db.Account
-	a.Username        = c.Session.Username
-	a.ConnectionId    = as.ConnectionId
-	a.Code            = as.Code
-	a.Name            = as.Name
-	a.SupportsAccount = conn.SupportsAccount
+	a.Username           = c.Session.Username
+	a.ConnectionId       = as.ConnectionId
+	a.Code               = as.Code
+	a.Name               = as.Name
+	a.SupportsAccounting = conn.SupportsAccounting
 
-	if conn.SupportsAccount {
+	if conn.SupportsAccounting {
 		acc,erra := findAccount(c, conn.Code, as.Code)
 		if erra != nil {
 			return nil,erra
@@ -146,7 +146,7 @@ func UpdateAccount(tx *gorm.DB, c *auth.Context, id uint, as *AccountSpec) (*db.
 
 	a.Name = as.Name
 
-	if !a.SupportsAccount {
+	if !a.SupportsAccounting {
 		a.Code           = as.Code
 		a.CurrentCapital = as.CurrentCapital
 		a.CurrencyId     = as.CurrencyId

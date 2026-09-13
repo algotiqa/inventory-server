@@ -58,23 +58,12 @@ func GetPortfolioById(tx *gorm.DB, c *auth.Context, id uint) (*PortfolioExt, err
 		return nil, err
 	}
 
-	//--- Get trading systems
-
-	filter := make(map[string]any)
-	filter["portfolio_id"] = id
-	tss,err := db.GetTradingSystemsFull(tx, filter, 0, 5000)
-	if err != nil {
-		c.Log.Error("GetPortfolioById: Could not retrieve trading systems", "error", err.Error())
-		return nil, err
-	}
-
 	//--- Put all together
 
 	pe := PortfolioExt{
-		Portfolio     : *p,
-		Account       : acc,
-		Currency      : curr,
-		TradingSystems: tss,
+		Portfolio: *p,
+		Account  : acc,
+		Currency : curr,
 	}
 
 	return &pe, nil
@@ -99,7 +88,6 @@ func AddPortfolio(tx *gorm.DB, c *auth.Context, ps *PortfolioSpec) (*db.Portfoli
 	p.Username      = c.Session.Username
 	p.Name          = ps.Name
 	p.AccountId     = ps.AccountId
-	p.Management    = ps.Management
 	p.AccountPerc   = ps.AccountPerc
 	p.MaxMarginPerc = ps.MaxMarginPerc
 
@@ -129,21 +117,7 @@ func UpdatePortfolio(tx *gorm.DB, c *auth.Context, id uint, ps *PortfolioSpec) (
 		return nil, err
 	}
 
-	if p.Management != ps.Management {
-		filter := map[string]any{}
-		filter["portfolio_id"] = id
-
-		tss,errs := db.GetTradingSystems(tx, filter, 0, 5000)
-		if errs != nil {
-			return nil, errs
-		}
-		if len(*tss) > 0 {
-			return nil, req.NewForbiddenError("Cannot change the management of a portfolio if there are trading systems attached")
-		}
-	}
-
 	p.Name          = ps.Name
-	p.Management    = ps.Management
 	p.AccountPerc   = ps.AccountPerc
 	p.MaxMarginPerc = ps.MaxMarginPerc
 

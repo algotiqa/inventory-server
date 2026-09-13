@@ -27,7 +27,7 @@ type System struct {
 	SupportsBroker        bool   `json:"supportsBroker"`
 	SupportsMultipleData  bool   `json:"supportsMultipleData"`
 	SupportsInventory     bool   `json:"supportsInventory"`
-	SupportsAccount       bool   `json:"supportsAccount"`
+	SupportsAccounting    bool   `json:"supportsAccounting"`
 }
 
 //=============================================================================

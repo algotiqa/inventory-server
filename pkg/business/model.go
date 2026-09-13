@@ -10,7 +10,6 @@
 package business
 
 import (
-	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/inventory-server/pkg/business/importexport"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"github.com/algotiqa/types"
@@ -181,20 +180,15 @@ type AccountExt struct {
 //=============================================================================
 
 type PortfolioSpec struct {
-	AccountId     uint              `json:"accountId"     binding:"required"`
-	Name          string            `json:"name"          binding:"required"`
-	Management    db.ManagementType `json:"management"    binding:"required"`
-	AccountPerc   float64           `json:"accountPerc"   binding:"min=1,max=100"`
-	MaxMarginPerc float64           `json:"maxMarginPerc" binding:"min=1,max=100"`
+	AccountId     uint     `json:"accountId"     binding:"required"`
+	Name          string   `json:"name"          binding:"required"`
+	AccountPerc   float64  `json:"accountPerc"   binding:"min=1,max=100"`
+	MaxMarginPerc float64  `json:"maxMarginPerc" binding:"min=1,max=100"`
 }
 
 //-----------------------------------------------------------------------------
 
 func (ps *PortfolioSpec) Validate() error {
-	if ps.Management != db.ManagementTypeManual && ps.Management != db.ManagementTypeAuto {
-		return req.NewBadRequestError("invalid management type: %v", ps.Management)
-	}
-
 	return nil
 }
 
@@ -202,9 +196,8 @@ func (ps *PortfolioSpec) Validate() error {
 
 type PortfolioExt struct {
 	db.Portfolio
-	Account        *db.Account             `json:"account"`
-	Currency       *db.Currency            `json:"currency"`
-	TradingSystems *[]db.TradingSystemFull `json:"tradingSystems"`
+	Account  *db.Account   `json:"account"`
+	Currency *db.Currency  `json:"currency"`
 }
 
 //=============================================================================

@@ -72,7 +72,7 @@ type Connection struct {
 	SupportsBroker       bool   `json:"supportsBroker"`
 	SupportsMultipleData bool   `json:"supportsMultipleData"`
 	SupportsInventory    bool   `json:"supportsInventory"`
-	SupportsAccount      bool   `json:"supportsAccount"`
+	SupportsAccounting   bool   `json:"supportsAccounting"`
 }
 
 //=============================================================================
@@ -232,14 +232,14 @@ func (ap AgentProfile) RemoteUrl() string {
 
 type Account struct {
 	Common
-	Username        string  `json:"username"`
-	ConnectionId    uint    `json:"connectionId"`
-	CurrencyId      uint    `json:"currencyId"`
-	Code            string  `json:"code"`
-	Name            string  `json:"name"`
-	CurrentCapital  float64 `json:"currentCapital"`
-	SupportsAccount bool    `json:"supportsAccount"`
-	StatusMessage   string  `json:"statusMessage"`
+	Username           string  `json:"username"`
+	ConnectionId       uint    `json:"connectionId"`
+	CurrencyId         uint    `json:"currencyId"`
+	Code               string  `json:"code"`
+	Name               string  `json:"name"`
+	CurrentCapital     float64 `json:"currentCapital"`
+	SupportsAccounting bool    `json:"supportsAccounting"`
+	StatusMessage      string  `json:"statusMessage"`
 }
 
 //=============================================================================
@@ -254,32 +254,23 @@ type AccountFull struct {
 
 //=============================================================================
 
-type ManagementType string
-
-const (
-	ManagementTypeManual ManagementType = "M"
-	ManagementTypeAuto   ManagementType = "A"
-)
-
-//-----------------------------------------------------------------------------
-
 type Portfolio struct {
 	Common
-	Username       string         `json:"username"`
-	AccountId      uint           `json:"accountId"`
-	Name           string         `json:"name"`
-	Management     ManagementType `json:"management"`
-	AccountPerc    float64        `json:"accountPerc"`
-	MaxMarginPerc  float64        `json:"maxMarginPerc"`
+	Username       string   `json:"username"`
+	AccountId      uint     `json:"accountId"`
+	Name           string   `json:"name"`
+	AccountPerc    float64  `json:"accountPerc"`
+	MaxMarginPerc  float64  `json:"maxMarginPerc"`
 }
 
 //=============================================================================
 
 type PortfolioFull struct {
 	Portfolio
-	AccountCode  string  `json:"accountCode,omitempty"`
-	AccountName  string  `json:"accountName,omitempty"`
-	CurrencyCode string  `json:"currencyCode,omitempty"`
+	AccountCode        string  `json:"accountCode,omitempty"`
+	AccountName        string  `json:"accountName,omitempty"`
+	CurrencyCode       string  `json:"currencyCode,omitempty"`
+	SupportsAccounting bool    `json:"supportsAccounting"`
 }
 
 //=============================================================================

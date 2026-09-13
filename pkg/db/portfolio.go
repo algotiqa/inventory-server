@@ -32,7 +32,7 @@ func GetPortfolios(tx *gorm.DB, filter map[string]any, offset int, limit int) (*
 func GetPortfoliosFull(tx *gorm.DB, filter map[string]any, offset int, limit int) (*[]PortfolioFull, error) {
 	var list []PortfolioFull
 	res := tx.Model(&Portfolio{}).Select("portfolio.*, " +
-		"currency.code as currency_code, account.code as account_code, account.name as account_name").
+		"currency.code as currency_code, account.code as account_code, account.name as account_name, supports_accounting").
 		Joins("LEFT JOIN account  ON portfolio.account_id = account.id").
 		Joins("LEFT JOIN currency ON account.currency_id  = currency.id").
 		Where(filter).Offset(offset).Limit(limit).Find(&list)
