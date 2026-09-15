@@ -1,6 +1,8 @@
 # Inventory server
 
-Standalone server that manages inventory information (products, brokers, trading systems, connections, etc...)
+Standalone server that manages inventory information (products, brokers, trading systems, connections, etc...).
+
+**Note:** the main documentation of the platform is located [HERE](https://github.com/algotiqa/docs).
 
 ## License
 
