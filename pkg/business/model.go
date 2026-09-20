@@ -180,10 +180,12 @@ type AccountExt struct {
 //=============================================================================
 
 type PortfolioSpec struct {
-	AccountId     uint     `json:"accountId"     binding:"required"`
-	Name          string   `json:"name"          binding:"required"`
-	AccountPerc   float64  `json:"accountPerc"   binding:"min=1,max=100"`
-	MaxMarginPerc float64  `json:"maxMarginPerc" binding:"min=1,max=100"`
+	AccountId         uint     `json:"accountId"         binding:"required"`
+	Name              string   `json:"name"              binding:"required"`
+	AccountPerc       float64  `json:"accountPerc"       binding:"min=1,max=100"`
+	MaxMarginPerc     float64  `json:"maxMarginPerc"     binding:"min=1,max=100"`
+	CorrelationPeriod int      `json:"correlationPeriod" binding:"min=1,max=1825"`  //--- 5 years max
+	RunPeriod         int      `json:"runPeriod"         binding:"min=0,max=52"`
 }
 
 //-----------------------------------------------------------------------------

@@ -256,11 +256,13 @@ type AccountFull struct {
 
 type Portfolio struct {
 	Common
-	Username       string   `json:"username"`
-	AccountId      uint     `json:"accountId"`
-	Name           string   `json:"name"`
-	AccountPerc    float64  `json:"accountPerc"`
-	MaxMarginPerc  float64  `json:"maxMarginPerc"`
+	Username          string   `json:"username"`
+	AccountId         uint     `json:"accountId"`
+	Name              string   `json:"name"`
+	AccountPerc       float64  `json:"accountPerc"`
+	MaxMarginPerc     float64  `json:"maxMarginPerc"`
+	CorrelationPeriod int      `json:"correlationPeriod"`
+	RunPeriod         int      `json:"runPeriod"`
 }
 
 //=============================================================================

@@ -85,11 +85,13 @@ func AddPortfolio(tx *gorm.DB, c *auth.Context, ps *PortfolioSpec) (*db.Portfoli
 	}
 
 	var p db.Portfolio
-	p.Username      = c.Session.Username
-	p.Name          = ps.Name
-	p.AccountId     = ps.AccountId
-	p.AccountPerc   = ps.AccountPerc
-	p.MaxMarginPerc = ps.MaxMarginPerc
+	p.Username          = c.Session.Username
+	p.Name              = ps.Name
+	p.AccountId         = ps.AccountId
+	p.AccountPerc       = ps.AccountPerc
+	p.MaxMarginPerc     = ps.MaxMarginPerc
+	p.CorrelationPeriod = ps.CorrelationPeriod
+	p.RunPeriod         = ps.RunPeriod
 
 	err = db.AddPortfolio(tx, &p)
 
@@ -117,9 +119,11 @@ func UpdatePortfolio(tx *gorm.DB, c *auth.Context, id uint, ps *PortfolioSpec) (
 		return nil, err
 	}
 
-	p.Name          = ps.Name
-	p.AccountPerc   = ps.AccountPerc
-	p.MaxMarginPerc = ps.MaxMarginPerc
+	p.Name              = ps.Name
+	p.AccountPerc       = ps.AccountPerc
+	p.MaxMarginPerc     = ps.MaxMarginPerc
+	p.CorrelationPeriod = ps.CorrelationPeriod
+	p.RunPeriod         = ps.RunPeriod
 
 	//--- Parent account cannot be changed
 	//p.AccountId = ps.AccountId
