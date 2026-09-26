@@ -36,7 +36,7 @@ const (
 
 //=============================================================================
 
-var agentMap map[uint]int = map[uint]int{}
+var agentMap = map[uint]int{}
 
 //=============================================================================
 
@@ -80,9 +80,9 @@ func getAgentProfiles() (*[]db.AgentProfile, error) {
 	var list *[]db.AgentProfile
 
 	err := dbms.RunInTransaction(func(tx *gorm.DB) error {
-		var err error
-		list, err = db.GetAgentProfiles(tx, filter, 0, 100000)
-		return err
+		var errt error
+		list, errt = db.GetAgentProfiles(tx, filter, 0, 100000)
+		return errt
 	})
 
 	return list, err
@@ -94,7 +94,7 @@ func runAgent(ap *db.AgentProfile) {
 	delay, found := agentMap[ap.Id]
 	if !found {
 		agentMap[ap.Id] = ap.ScanInterval
-		delay = ap.ScanInterval
+		delay           = ap.ScanInterval
 	}
 
 	//--- 0 disables scanning
@@ -245,6 +245,22 @@ func SendTrades(ts *db.TradingSystem, ats *TradingSystem, location *time.Locatio
 		}
 	}
 
+	//--- Handle daily returns
+
+	var dailyReturns []*DailyReturnItem
+
+	for _, tl := range ats.TradeLists {
+		for _, adr := range tl.DailyReturns {
+			dr := createDailyReturn(ats.Name, adr, location)
+			if dr == nil {
+				return errors.New("aborted")
+			}
+			dailyReturns = append(dailyReturns, dr)
+		}
+	}
+
+	//--- Handle open trade
+
 	var equity []*EquityBarItem
 
 	if len(ats.TradeLists) > 0 {
@@ -264,6 +280,7 @@ func SendTrades(ts *db.TradingSystem, ats *TradingSystem, location *time.Locatio
 		Reload         : reload,
 		Trades         : tradeList,
 		OpenTrade      : equity,
+		DailyReturns   : dailyReturns,
 	}
 
 	err := msg.SendMessage(msg.ExRuntime, msg.SourceTrade, msg.TypeCreate, message, nil)
@@ -362,6 +379,21 @@ func createEquity(list []*EquityBar, loc *time.Location) []*EquityBarItem {
 	}
 
 	return result
+}
+
+//=============================================================================
+
+func createDailyReturn(extRef string, adr *DailyReturn, loc *time.Location) *DailyReturnItem {
+	date, err := parseDate(adr.Date, adr.Time, loc)
+	if err != nil {
+		slog.Error("createDailyReturn: Cannot parse date/time for strategy", "date", adr.Date, "time", adr.Time, "error", err, "strategy", extRef)
+		return nil
+	}
+
+	return &DailyReturnItem{
+		Date       : date,
+		GrossReturn: adr.GrossReturn,
+	}
 }
 
 //=============================================================================

@@ -46,9 +46,10 @@ type TradingSystem struct {
 //=============================================================================
 
 type TradeList struct {
-	FileName   string         `json:"fileName"`
-	Trades     []*Trade       `json:"trades"`
-	OpenTrade  []*EquityBar   `json:"openTrade"`
+	FileName     string         `json:"fileName"`
+	Trades       []*Trade       `json:"trades"`
+	OpenTrade    []*EquityBar   `json:"openTrade"`
+	DailyReturns []*DailyReturn `json:"dailyReturns"`
 }
 
 //=============================================================================
@@ -78,16 +79,25 @@ type EquityBar struct {
 }
 
 //=============================================================================
+
+type DailyReturn struct {
+	Date        int     `json:"date"`
+	Time        int     `json:"time"`
+	GrossReturn float64 `json:"grossReturn"`
+}
+
+//=============================================================================
 //===
 //=== Message
 //===
 //=============================================================================
 
 type TradeListMessage struct {
-	TradingSystemId uint             `json:"tradingSystemId"`
-	Reload          bool             `json:"reload"`
-	Trades          []*TradeItem     `json:"trades"`
-	OpenTrade       []*EquityBarItem `json:"openTrade"`
+	TradingSystemId uint               `json:"tradingSystemId"`
+	Reload          bool               `json:"reload"`
+	Trades          []*TradeItem       `json:"trades"`
+	OpenTrade       []*EquityBarItem   `json:"openTrade"`
+	DailyReturns    []*DailyReturnItem `json:"dailyReturns"`
 }
 
 //=============================================================================
@@ -118,6 +128,13 @@ type EquityBarItem struct {
 	Date        time.Time  `json:"date"`
 	GrossReturn float64    `json:"grossReturn"`
 	Contracts   int        `json:"contracts"`
+}
+
+//=============================================================================
+
+type DailyReturnItem struct {
+	Date        time.Time  `json:"date"`
+	GrossReturn float64    `json:"grossReturn"`
 }
 
 //=============================================================================
