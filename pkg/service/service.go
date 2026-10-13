@@ -7,7 +7,6 @@
 //=== By using this file, you agree to the terms and conditions of that license.
 //=============================================================================
 
-
 package service
 
 import (
@@ -49,6 +48,7 @@ func Init(router *gin.Engine, cfg *app.Config, logger *slog.Logger) {
 	router.DELETE("/api/inventory/v1/trading-systems/:id",               ctrl.Secure(deleteTradingSystem,   roles.Admin_User_Service))
 	router.POST  ("/api/inventory/v1/trading-systems/:id/finalize",      ctrl.Secure(finalizeTradingSystem, roles.Admin_User_Service))
 	router.POST  ("/api/inventory/v1/trading-systems/:id/reload-trades", ctrl.Secure(reloadTradesFromAgent, roles.Admin_User_Service))
+	router.POST  ("/api/inventory/v1/trading-systems/:id/import-trades", ctrl.Secure(importTradesFromFile,  roles.Admin_User_Service))
 	router.GET   ("/api/inventory/v1/trading-systems/export",            ctrl.Secure(exportTradingSystems,  roles.Admin_User_Service))
 	router.POST  ("/api/inventory/v1/trading-systems/import/overview",   ctrl.Secure(createImportOverview,  roles.Admin_User_Service))
 	router.POST  ("/api/inventory/v1/trading-systems/import/execute",    ctrl.Secure(executeImportPlan,     roles.Admin_User_Service))

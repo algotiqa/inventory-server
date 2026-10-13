@@ -17,6 +17,7 @@ import (
 	"github.com/algotiqa/core/msg"
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/inventory-server/pkg/business/importexport"
+	"github.com/algotiqa/inventory-server/pkg/business/tradeimport"
 	"github.com/algotiqa/inventory-server/pkg/core/messaging"
 	"github.com/algotiqa/inventory-server/pkg/core/process/agentscanner"
 	"github.com/algotiqa/inventory-server/pkg/db"
@@ -319,6 +320,50 @@ func ExecuteImportPlan(tx *gorm.DB, c *auth.Context, spec *ImportExecutionSpec, 
 	}
 
 	return err
+}
+
+//=============================================================================
+
+func ImportTradeFile(tx *gorm.DB, c *auth.Context, id uint, spec *tradeimport.Spec, data []byte) (*tradeimport.Response, error) {
+	c.Log.Info("ImportTradeFile: Importing trade file", "tsId", id, "wideData", spec.WipeData)
+	ts, err := getTradingSystem(tx, c, id, "ImportTradeFile")
+	if err != nil {
+		return nil, err
+	}
+
+	location, err := agentscanner.GetLocation(tx, ts)
+	if err != nil {
+		c.Log.Error("ImportTradeFile: Cannot retrieve timezone for trading system.", "id", ts.Id, "error", err)
+		return nil, req.NewServerErrorByError(err)
+	}
+
+	ats,err := tradeimport.ImportTrades(spec, data)
+	if err != nil {
+		return nil,req.NewBadRequestError(err.Error())
+	}
+
+	err = agentscanner.SendTrades(ts, ats, location, spec.WipeData)
+	if err != nil {
+		return nil, req.NewServerErrorByError(err)
+	}
+
+	//--- Return result
+
+	res := &tradeimport.Response{}
+	if len(ats.TradeLists) > 0 {
+		tl := ats.TradeLists[0]
+		res.Trades       = len(tl.Trades)
+		res.DailyReturns = len(tl.DailyReturns)
+
+		for _, tr := range tl.Trades {
+			res.Bars += len(tr.Equity)
+		}
+	}
+
+	c.Log.Info( "ImportTradeFile: Trade import completed",
+				"id", id, "trades", res.Trades, "bars", res.Bars, "dailyReturns", res.DailyReturns)
+
+	return res,err
 }
 
 //=============================================================================

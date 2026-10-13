@@ -7,7 +7,6 @@
 //=== By using this file, you agree to the terms and conditions of that license.
 //=============================================================================
 
-
 package service
 
 import (
@@ -21,6 +20,7 @@ import (
 	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/inventory-server/pkg/business"
 	"github.com/algotiqa/inventory-server/pkg/business/importexport"
+	"github.com/algotiqa/inventory-server/pkg/business/tradeimport"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"gorm.io/gorm"
 )
@@ -200,7 +200,7 @@ func createImportOverview(c *auth.Context) {
 			if err == nil {
 				if part, err = reader.NextPart(); err != io.EOF {
 					var data []byte
-					data, err = getImportPackage(part)
+					data, err = getFileData(part)
 					_ = part.Close()
 
 					if err == nil {
@@ -238,7 +238,7 @@ func executeImportPlan(c *auth.Context) {
 			if err == nil {
 				if part, err = reader.NextPart(); err != io.EOF {
 					var data []byte
-					data, err = getImportPackage(part)
+					data, err = getFileData(part)
 					_ = part.Close()
 
 					if err == nil {
@@ -249,6 +249,48 @@ func executeImportPlan(c *auth.Context) {
 						if err == nil {
 							_ = c.ReturnObject(true)
 							return
+						}
+					}
+				}
+			}
+		}
+	}
+
+	c.ReturnError(err)
+}
+
+//=============================================================================
+
+func importTradesFromFile(c *auth.Context) {
+	id, err := c.GetIdFromUrl()
+	if err == nil {
+		var reader *multipart.Reader
+		reader, err = c.Gin.Request.MultipartReader()
+		if err == nil {
+			var part *multipart.Part
+
+			if part, err = reader.NextPart(); err != io.EOF {
+				var spec *tradeimport.Spec
+				spec, err = retrieveTradeImportSpec(part)
+
+				if err == nil {
+					if part, err = reader.NextPart(); err != io.EOF {
+						var data []byte
+						data, err = getFileData(part)
+						_ = part.Close()
+
+						if err == nil {
+							var res *tradeimport.Response
+							err = dbms.RunInTransaction(func(tx *gorm.DB) error {
+								rex,exx := business.ImportTradeFile(tx, c, id, spec, data)
+								res = rex
+								return exx
+							})
+
+							if err == nil {
+								_ = c.ReturnObject(res)
+								return
+							}
 						}
 					}
 				}
@@ -309,7 +351,7 @@ func retrieveImportExecutionSpec(part *multipart.Part) (*business.ImportExecutio
 
 //=============================================================================
 
-func getImportPackage(part io.Reader) ([]byte, error) {
+func getFileData(part io.Reader) ([]byte, error) {
 	buf := new(bytes.Buffer)
 	_, err := io.Copy(buf, part)
 
@@ -318,6 +360,28 @@ func getImportPackage(part io.Reader) ([]byte, error) {
 	}
 
 	return buf.Bytes(), nil
+}
+
+//=============================================================================
+
+func retrieveTradeImportSpec(part *multipart.Part) (*tradeimport.Spec, error) {
+	data, err := io.ReadAll(part)
+
+	if err == nil {
+		var spec tradeimport.Spec
+
+		err = json.Unmarshal(data, &spec)
+
+		if err == nil {
+			err = part.Close()
+
+			if err == nil {
+				return &spec, nil
+			}
+		}
+	}
+
+	return nil, err
 }
 
 //=============================================================================
