@@ -63,7 +63,7 @@ func AddTradingSystem(tx *gorm.DB, c *auth.Context, tss *TradingSystemSpec) (*db
 
 	//--- External systems are already finalized
 
-	if ts.AgentProfileId != nil {
+	if ts.EngineCode == db.EngineCodeExternal {
 		ts.Finalized = true
 	}
 

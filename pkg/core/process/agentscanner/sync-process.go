@@ -180,7 +180,7 @@ func enqueueAgentTrades(tx *gorm.DB, ap *db.AgentProfile, ats *TradingSystem) er
 	}
 
 	if ts == nil {
-		slog.Warn("Trading system was not found. Skipping", "externalRef", ats.Name, "username", ap.Username)
+		slog.Warn("Trading system associated to agent was not found. Skipping", "externalRef", ats.Name, "username", ap.Username)
 		return nil
 	}
 
