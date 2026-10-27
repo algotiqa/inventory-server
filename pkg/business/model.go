@@ -10,6 +10,7 @@
 package business
 
 import (
+	"github.com/algotiqa/core/req"
 	"github.com/algotiqa/inventory-server/pkg/business/importexport"
 	"github.com/algotiqa/inventory-server/pkg/db"
 	"github.com/algotiqa/types"
@@ -180,17 +181,29 @@ type AccountExt struct {
 //=============================================================================
 
 type PortfolioSpec struct {
-	AccountId         uint     `json:"accountId"         binding:"required"`
-	Name              string   `json:"name"              binding:"required"`
-	AccountPerc       float64  `json:"accountPerc"       binding:"min=1,max=100"`
-	MaxMarginPerc     float64  `json:"maxMarginPerc"     binding:"min=1,max=100"`
-	CorrelationPeriod int      `json:"correlationPeriod" binding:"min=1,max=1825"`  //--- 5 years max
-	RunPeriod         int      `json:"runPeriod"         binding:"min=0,max=52"`
+	AccountId         uint          `json:"accountId"`
+	Name              string        `json:"name"              binding:"required"`
+	AccountPerc       float64       `json:"accountPerc"       binding:"min=1,max=100"`
+	MaxMarginPerc     float64       `json:"maxMarginPerc"     binding:"min=1,max=100"`
+	CorrelationPeriod int           `json:"correlationPeriod" binding:"min=1,max=1825"`  //--- 5 years max
+	PeriodType        db.PeriodType `json:"periodType"        binding:"required"`
+	RunPeriod         int           `json:"runPeriod"         binding:"min=0,max=52"`
+	Paused            bool          `json:"paused"            binding:"required"`
 }
 
 //-----------------------------------------------------------------------------
 
-func (ps *PortfolioSpec) Validate() error {
+func (ps *PortfolioSpec) Validate(forInsert bool) error {
+	if forInsert {
+		if ps.AccountId == 0 {
+			return req.NewBadRequestError("accountId is missing")
+		}
+	}
+
+	if ps.PeriodType != db.PeriodTypeWeekly && ps.PeriodType != db.PeriodTypeMonthly {
+		return req.NewBadRequestError("invalid period type %s", ps.PeriodType)
+	}
+
 	return nil
 }
 

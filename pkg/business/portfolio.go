@@ -74,7 +74,7 @@ func GetPortfolioById(tx *gorm.DB, c *auth.Context, id uint) (*PortfolioExt, err
 func AddPortfolio(tx *gorm.DB, c *auth.Context, ps *PortfolioSpec) (*db.Portfolio, error) {
 	c.Log.Info("AddPortfolio: Adding a new portfolio", "name", ps.Name)
 
-	if err := ps.Validate(); err != nil {
+	if err := ps.Validate(true); err != nil {
 		return nil, err
 	}
 
@@ -91,7 +91,9 @@ func AddPortfolio(tx *gorm.DB, c *auth.Context, ps *PortfolioSpec) (*db.Portfoli
 	p.AccountPerc       = ps.AccountPerc
 	p.MaxMarginPerc     = ps.MaxMarginPerc
 	p.CorrelationPeriod = ps.CorrelationPeriod
+	p.PeriodType        = ps.PeriodType
 	p.RunPeriod         = ps.RunPeriod
+	p.Paused            = ps.Paused
 
 	err = db.AddPortfolio(tx, &p)
 
@@ -114,6 +116,10 @@ func AddPortfolio(tx *gorm.DB, c *auth.Context, ps *PortfolioSpec) (*db.Portfoli
 func UpdatePortfolio(tx *gorm.DB, c *auth.Context, id uint, ps *PortfolioSpec) (*db.Portfolio, error) {
 	c.Log.Info("UpdatePortfolio: Updating a portfolio", "id", id, "name", ps.Name)
 
+	if err := ps.Validate(false); err != nil {
+		return nil, err
+	}
+
 	p, err := getPortfolio(tx, c, id, "UpdatePortfolio")
 	if err != nil {
 		return nil, err
@@ -123,7 +129,9 @@ func UpdatePortfolio(tx *gorm.DB, c *auth.Context, id uint, ps *PortfolioSpec) (
 	p.AccountPerc       = ps.AccountPerc
 	p.MaxMarginPerc     = ps.MaxMarginPerc
 	p.CorrelationPeriod = ps.CorrelationPeriod
+	p.PeriodType        = ps.PeriodType
 	p.RunPeriod         = ps.RunPeriod
+	p.Paused            = ps.Paused
 
 	//--- Parent account cannot be changed
 	//p.AccountId = ps.AccountId
